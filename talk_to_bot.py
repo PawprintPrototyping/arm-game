@@ -1,5 +1,6 @@
 import os
 import serial
+import random
 
 DEVICE = os.environ.get("DEVICE", "/dev/ttyUSB0")
 BAUDRATE = int(os.environ.get("BAUDRATE", "38400"))
@@ -43,6 +44,16 @@ class RobotSerial(object):
         assert True
 
 
+    def poll_position(self):
+        # Check to see if the missile knows where it is
+        # (commanded position matches current position)
+        pass
+
+
+    def move(self, location):
+        self.write(f"move {location}\n".encode('latin1'))
+
+
     def close(self):
         self.ser.close()
 
@@ -51,5 +62,10 @@ if __name__ == "__main__":
     with RobotSerial(DEVICE, BAUDRATE, timeout=1) as rs:
         rs.assert_ash_prompt()
         rs.write(STARTUP_SCRIPT)
-        rs.write(b"move p1\n")
         
+        locations = ROBOT_LOCATIONS
+        random.shuffle(locations)
+        for location in ROBOT_LOCATIONS:
+            rs.move(location)
+
+        rs.move(ROBOT_LOCATIONS[-1])
