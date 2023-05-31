@@ -5,7 +5,7 @@ import random
 DEVICE = os.environ.get("DEVICE", "/dev/ttyUSB0")
 BAUDRATE = int(os.environ.get("BAUDRATE", "38400"))
 
-STARTUP_SCRIPT = b"""speed 90
+STARTUP_SCRIPT = b"""speed 100
 """
 
 ROBOT_LOCATIONS = ["p1", "p2", "p3", "p4", "p5"]
@@ -24,9 +24,8 @@ class RobotSerial(object):
 
     def write(self, data): 
         print("<", data)
-        count = self.ser.write(data)
-        self.readline()
-        return count
+        self.ser.write(data)
+        return self.readline()
 
     def readline(self):
         line = self.ser.readline()
@@ -53,19 +52,27 @@ class RobotSerial(object):
     def move(self, location):
         self.write(f"move {location}\n".encode('latin1'))
 
+    def finish(self, location):
+        prompt = self.write(f"move {location}\n".encode('latin1'))
+        assert prompt.endswith(f"move {location}\r\n".encode('latin1'))
+        prompt = self.write(b"finish\n")
+        while prompt != b"test> ":
+            prompt = self.readline()
+            print(prompt)
+
 
     def close(self):
         self.ser.close()
 
 
 if __name__ == "__main__":
-    with RobotSerial(DEVICE, BAUDRATE, timeout=1) as rs:
+    with RobotSerial(DEVICE, BAUDRATE, timeout=0.5) as rs:
         rs.assert_ash_prompt()
         rs.write(STARTUP_SCRIPT)
         
         locations = ROBOT_LOCATIONS
         random.shuffle(locations)
         for location in ROBOT_LOCATIONS:
-            rs.move(location)
+            rs.finish(location)
 
-        rs.move(ROBOT_LOCATIONS[-1])
+        rs.finish(ROBOT_LOCATIONS[-1])
