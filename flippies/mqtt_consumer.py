@@ -1,61 +1,79 @@
-import asyncio
-import logging
-
-from asyncio_paho import AsyncioPahoClient
 import json
+import logging
+import os
+import threading
 
-from flippies.flipdigits import FlipDigits
+import paho.mqtt.client as mqtt
 import structlog
 
-MQTT_HOST="localhost"
-DEBUG=True
-DEVICE="/dev/ttyUSB4"
-BAUDRATE=57600
+from flippies.flipdigits import FlipDigits
 
-#structlog.configure(
-#    wrapper_class=structlog.make_filtering_bound_logger(logging.DEBUG),
-#)
+MQTT_HOST = os.getenv("MQTT_HOST", "localhost")
+DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "t")
+DEVICE = os.getenv("DEVICE", "/dev/ttyUSB4")
+BAUDRATE = int(os.getenv("BAUDRATE", "57600"))
 
+
+if DEBUG:
+    logging.basicConfig(level=logging.DEBUG)
 log = structlog.getLogger(__name__)
-flipdigits = FlipDigits(DEVICE, BAUDRATE, debug=DEBUG)
 
-async def on_connect(client, userdata, flags_dict, result):
-    log.info("on_connect", client=client, userdata=userdata, flags_dict=flags_dict, result=result)
-    client.async_subscribe("/display/digits/#")
 
-async def on_message_async(client, flipdigits, msg):
-    log.info("on_message_async", flipdigits=flipdigits, topic=msg.topic, payload=msg.payload)
-    data = None
+def on_connect(client, userdata, flags_dict, result):
+    log.info(
+        "on_connect",
+        client=client,
+        userdata=userdata,
+        flags_dict=flags_dict,
+        result=result,
+    )
+    client.subscribe(f"/display/digits/#")
+
+
+def on_message(client, flipdigits, msg):
+    log.info("on_message", flipdigits=flipdigits, topic=msg.topic, payload=msg.payload)
+    data = {}
     try:
-        data = json.loads(msg.payload.encode("utf8"))
+        data = json.loads(msg.payload.decode("utf8"))
     except json.JSONDecodeError:
-        log.warn("Payload is not JSON decodeable", mqtt_msg=msg)
+        log.warn("Payload is not valid JSON", mqtt_msg=msg)
 
     match msg.topic:
         case "/display/digits/clear":
+            flipdigits.stop = True
+            flipdigits.delay_thread.join()
             flipdigits.clear()
         case "/display/digits/set_number":
             delay = data.get("delay", 0)
-            flipdigits.set_number(data["number"], delay)
-        case "/display/digits/marquee":
+            if "number" in data:
+                flipdigits.delay_thread = threading.Thread(
+                    target=flipdigits.set_number, args=(delay,)
+                )
+                flipdigits.delay_thread.start()
+            else:
+                log.error("Cannot set_number() - `number` is a required argument")
+        case "/display/digits/snake":
             delay = data.get("delay", 0.1)
-            flipdigits.marquee(delay)
+            flipdigits.delay_thread = threading.Thread(
+                target=flipdigits.snake, args=(delay,)
+            )
+            flipdigits.delay_thread.start()
         case "/display/digits/set_digit":
-            flipdigits.set_digit(data["address"], data["number"])
+            if "address" in data and "number" in data:
+                flipdigits.set_digit(data["address"], data["number"])
+            else:
+                log.error(
+                    "Cannot set_digit() - `address` and `number` are required arguments"
+                )
 
-    print(f"Received from {msg.topic}: {str(msg.payload)}")
 
-
-async def main():
-    async with AsyncioPahoClient() as client:
-        client.asyncio_listeners.add_on_connect(on_connect_async)
-        client.asyncio_listeners.add_on_message(on_message_async)
-        client.user_data_set(flipdigits)
-        await client.asyncio_connect(MQTT_HOST)
-
-        while True:
-            await asyncio.sleep(1)
-
+mqttc = mqtt.Client()
+mqttc.enable_logger(log)
+mqttc.on_connect = on_connect
+mqttc.on_message = on_message
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    flipdigits = FlipDigits(DEVICE, BAUDRATE, debug=DEBUG)
+    mqttc.user_data_set(flipdigits)
+    mqttc.connect(host=MQTT_HOST)
+    mqttc.loop_forever()
