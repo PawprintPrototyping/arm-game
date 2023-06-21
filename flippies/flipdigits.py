@@ -1,6 +1,7 @@
 import time
 import random
 
+import structlog
 from serial import Serial
 
 DEVICE="/dev/ttyUSB4"
@@ -29,74 +30,90 @@ DIGITS = [
     0b1100111, # 9
 ]
 
-def set_digit(address, number):
-    digit = DIGITS[number]
-    print(f"Write: 0x80 0x89 {address:>08b} {digit:>08b} 0x8f")
-    ser.write([0x80,0x89, address, digit, 0x8f])
+log = structlog.getLogger(__name__)
 
-def clear():
-    #       START,   SET   ALL    0     END
-    ser.write([0x80, 0x89, 0xff, 0x00, 0x8f])
+class FlipDigits(object):
+    def __init__(self, *args, **kwargs):
+        self._debug = kwargs.get("debug")
+        if self._debug:
+            self.ser = open("/dev/null")
+        else:
+            self.ser = Serial(*args, **kwargs)
 
+    def set_digit(self, address: int, number: int):
+        digit = DIGITS[number]
+        log.debug(f"write: 0x80 0x89 {address:>08b} {digit:>08b} 0x8f", address=address, digit=digit)
+        self.ser.write([0x80, 0x89, address, digit, 0x8f])
 
-def set_number(number: int, delay=0):
-    if number > 9999:
-        number = 9999
-    digits = [ int(d) for d in f"{number:04}" ]
-    digits.reverse()
-    for address, d in enumerate(digits):
-        set_digit(address, d)
-        time.sleep(delay)
+    def write(self, data):
+        log.debug(f"write: {data}", data=data)
+        return self.ser.write(data)
 
-def marquee(delay=0.1):
-    SEQ = (
-        (3, 0b000001),
-        (2, 0b000001),
-        (1, 0b000001),
-        (0, 0b000001),
-        (0, 0b000011),
-        (0, 0b000111),
-        (0, 0b001111),
-        (1, 0b001001),
-        (2, 0b001001),
-        (3, 0b001001),
-        (3, 0b011001),
-        (3, 0b111001),
-        (3, 0b111000),
-        (2, 0b001000),
-        (1, 0b001000),
-        (0, 0b001110),
-        (0, 0b001100),
-        (0, 0b001000),
-        (0, 0b000000),
-        (1, 0b000000),
-        (2, 0b000000),
-        (3, 0b110000),
-        (3, 0b100000),
-        (3, 0b000000),
-    )
+    def clear(self):
+        log.info("Clear display")
+        #          START, SET   ALL    0     END
+        self.write([0x80, 0x89, 0xff, 0x00, 0x8f])
 
-    for addr, bits in SEQ:
-        ser.write([0x80, 0x89, addr, bits, 0x8f])
-        time.sleep(delay)
+    def set_number(self, number: int, delay=0):
+        log.debug("set_number", number=number, delay=delay)
+        if number > 9999:
+            number = 9999
+        digits = [ int(d) for d in f"{number:04}" ]
+        digits.reverse()
+        for address, d in enumerate(digits):
+            self.set_digit(address, d)
+            time.sleep(delay)
+
+    def marquee(self, delay=0.1):
+        log.debug("marquee()", delay=delay)
+        SEQ = (
+            (3, 0b000001),
+            (2, 0b000001),
+            (1, 0b000001),
+            (0, 0b000001),
+            (0, 0b000011),
+            (0, 0b000111),
+            (0, 0b001111),
+            (1, 0b001001),
+            (2, 0b001001),
+            (3, 0b001001),
+            (3, 0b011001),
+            (3, 0b111001),
+            (3, 0b111000),
+            (2, 0b001000),
+            (1, 0b001000),
+            (0, 0b001110),
+            (0, 0b001100),
+            (0, 0b001000),
+            (0, 0b000000),
+            (1, 0b000000),
+            (2, 0b000000),
+            (3, 0b110000),
+            (3, 0b100000),
+            (3, 0b000000),
+        )
+
+        for addr, bits in SEQ:
+            self.write([0x80, 0x89, addr, bits, 0x8f])
+            time.sleep(delay)
 
 
 if __name__ == "__main__":
-    ser = Serial(DEVICE, BAUDRATE)
-    set_number(8888)
-    clear()
+    fd = FlipDigits(DEVICE, BAUDRATE)
+    fd.set_number(8888)
+    fd.clear()
     while True:
         inp = input("> ")
         if inp == "":
-            clear()
+            fd.clear()
         elif inp == "m":
-            marquee(0.25)
-            marquee(0.05)
+            fd.marquee(0.25)
+            fd.marquee(0.05)
         elif inp == "q":
-            ser.close()
+            fd.ser.close()
             exit()
         else:
-            set_number(int(inp), 0.1)
-        #set_number(random.randint(0, 9999))
+            fd.set_number(int(inp), 0.1)
+        #fd.set_number(random.randint(0, 9999))
         #time.sleep(1)
     
