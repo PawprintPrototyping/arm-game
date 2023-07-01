@@ -7,7 +7,7 @@ import serial
 import structlog
 from serial import Serial
 
-DEVICE = "/dev/ttyUSB4"
+DEVICE = "/dev/ttyUSB0"
 BAUDRATE = 57600
 
 """
@@ -70,7 +70,7 @@ log = structlog.getLogger(__name__)
 
 class FlipDigits(object):
     def __init__(self, *args, **kwargs):
-        self._debug = kwargs.get("debug")
+        self._debug = kwargs.pop("debug")
         self.stop = False
         self.delay_thread = threading.Thread()
         if self._debug:

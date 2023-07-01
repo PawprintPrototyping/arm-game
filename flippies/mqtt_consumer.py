@@ -6,11 +6,11 @@ import threading
 import paho.mqtt.client as mqtt
 import structlog
 
-from flippies.flipdigits import FlipDigits
+from flipdigits import FlipDigits
 
 MQTT_HOST = os.getenv("MQTT_HOST", "localhost")
 DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "t")
-DEVICE = os.getenv("DEVICE", "/dev/ttyUSB4")
+DEVICE = os.getenv("DEVICE", "/dev/ttyUSB0")
 BAUDRATE = int(os.getenv("BAUDRATE", "57600"))
 
 
