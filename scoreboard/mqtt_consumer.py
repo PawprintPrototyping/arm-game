@@ -45,6 +45,7 @@ def on_message(client, rgbmatrix, msg):
             rgbmatrix.delay_thread.join()
 
         case "/scoreboard/rgb/start_timer":
+            self.
             try:
                 rgbmatrix.stop = True
                 rgbmatrix.delay_thread.join()
@@ -73,6 +74,5 @@ mqttc.on_message = on_message
 if __name__ == "__main__":
     rgb_matrix = Scoreboard(debug=DEBUG)
     mqttc.user_data_set(rgb_matrix)
-    exit()
     mqttc.connect(host=MQTT_HOST)
     mqttc.loop_forever()

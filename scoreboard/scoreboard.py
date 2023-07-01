@@ -18,7 +18,7 @@ class Scoreboard(RGBBase):
         super(Scoreboard, self).__init__(*args, **kwargs)
 
         self.minutes = kwargs.get("minutes", 1)
-        self.seconds = kwargs.get("seconds", 0)
+        self.seconds = kwargs.get("seconds", 1)
         self.stop = False
         self.pause = False
         self.delay_thread = threading.Thread()
@@ -51,8 +51,8 @@ class Scoreboard(RGBBase):
         encouraging_color = random.choice(message_colors)
 
         #graphics.DrawLine(canvas, 5, 5, 22, 13, red)
-        for minutes in range(timer_minutes-1, -1, -1):
-            for seconds in range(timer_seconds-1, -1, -1):
+        for minutes in range(timer_minutes, -1, -1):
+            for seconds in range(60, -1, -1):
                 if seconds % 7 == 0:
                     encouraging_message = self.get_encouraging_message()
                     encouraging_color = random.choice(message_colors)
