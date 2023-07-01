@@ -3,11 +3,16 @@ import time
 import sys
 import os
 
+DEBUG = os.getenv("DEBUG", False)
+
 sys.path.append(os.path.abspath(os.path.dirname(__file__) + '/..'))
-from rgbmatrix import RGBMatrix, RGBMatrixOptions
+if DEBUG:
+    from RGBMatrixEmulator import RGBMatrix, RGBMatrixOptions
+else:
+    from rgbmatrix import RGBMatrix, RGBMatrixOptions
 
 
-class SampleBase(object):
+class RGBBase(object):
     def __init__(self, *args, **kwargs):
         self.parser = argparse.ArgumentParser()
 
