@@ -41,29 +41,17 @@ def on_message(client, rgbmatrix, msg):
 
     match msg.topic:
         case "/scoreboard/rgb/clear":
-            rgbmatrix.stop = True
-            rgbmatrix.delay_thread.join()
+            rgbmatrix.state = Scoreboard.CLEAR
 
         case "/scoreboard/rgb/start_timer":
-            self.
-            try:
-                rgbmatrix.stop = True
-                rgbmatrix.delay_thread.join()
-            except RuntimeError:
-                pass
-            rgbmatrix.stop = False
-            rgbmatrix.pause = False
-            rgbmatrix.delay_thread = threading.Thread(target=rgbmatrix.run)
-            rgbmatrix.delay_thread.start()
-
-        case "/scoreboard/rgb/pause_timer":
-            rgbmatrix.pause = True
+            rgbmatrix.state = Scoreboard.TIMER
 
         case "/scoreboard/rgb/game_over":
+            rgbmatrix.state = Scoreboard.GAME_OVER
+
+        case "/scoreboard/rgb/stop_gracefully":
             rgbmatrix.stop = True
-            rgbmatrix.delay_thread.join()
-            rgbmatrix.delay_thread = threading.Thread(target=rgbmatrix.game_over)
-            rgbmatrix.delay_thread.start()
+            rgbmatrix.delay_thread.join(timeout=10)
 
 
 mqttc = mqtt.Client()
@@ -75,4 +63,6 @@ if __name__ == "__main__":
     rgb_matrix = Scoreboard(debug=DEBUG)
     mqttc.user_data_set(rgb_matrix)
     mqttc.connect(host=MQTT_HOST)
+    rgb_matrix.delay_thread = threading.Thread(target=rgb_matrix.process)
+    rgb_matrix.delay_thread.start()
     mqttc.loop_forever()

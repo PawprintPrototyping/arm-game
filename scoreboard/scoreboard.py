@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 import os
 import threading
+import logging
+import structlog
 
 DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "t")
 
@@ -13,10 +15,23 @@ else:
 import time
 import random
 
+DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "t")
+
+if DEBUG:
+    logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.DEBUG)
+log = structlog.getLogger(__name__)
+
 class Scoreboard(RGBBase):
+    IDLE = "idle"
+    CLEAR = "clear"
+    TIMER = "timer"
+    GAME_OVER = "game_over"
+
     def __init__(self, *args, **kwargs):
         super(Scoreboard, self).__init__(*args, **kwargs)
 
+        self.state = Scoreboard.IDLE
         self.minutes = kwargs.get("minutes", 1)
         self.seconds = kwargs.get("seconds", 1)
         self.stop = False
@@ -33,7 +48,21 @@ class Scoreboard(RGBBase):
         self.small_font = graphics.Font()
         self.small_font.LoadFont("fonts/5x8.bdf")
 
-    def run(self, timer_minutes=None, timer_seconds=None):
+    def run(self):
+        log.debug("Scoreboard thread running")
+        while not self.stop:
+            match self.state:
+                case Scoreboard.TIMER:
+                    self.timer()
+                case Scoreboard.GAME_OVER:
+                    self.game_over()
+                    self.state = Scoreboard.IDLE
+                case Scoreboard.CLEAR:
+                    self.clear()
+                    self.state = Scoreboard.IDLE
+            time.sleep(0.1)
+
+    def timer(self, timer_minutes=None, timer_seconds=None):
         if timer_minutes is None:
             timer_minutes = self.minutes
         if timer_seconds is None:
@@ -52,6 +81,7 @@ class Scoreboard(RGBBase):
 
         #graphics.DrawLine(canvas, 5, 5, 22, 13, red)
         for minutes in range(timer_minutes, -1, -1):
+            # FIXME: Can't actually set seconds here
             for seconds in range(60, -1, -1):
                 if seconds % 7 == 0:
                     encouraging_message = self.get_encouraging_message()
@@ -70,14 +100,10 @@ class Scoreboard(RGBBase):
 
                     canvas = self.matrix.SwapOnVSync(canvas)
                     time.sleep(0.1)
-                    if self.stop:
+                    if self.state != Scoreboard.TIMER:
                         return
-                    while self.pause:
-                        time.sleep(0.1)
 
         #graphics.DrawCircle(canvas, 15, 15, 10, green)
-
-        time.sleep(10)   # show display for 10 seconds before exit
 
     def game_over(self, blocking=False):
         canvas = self.matrix.CreateFrameCanvas()
@@ -85,10 +111,10 @@ class Scoreboard(RGBBase):
         canvas.Fill(255, 0, 0)
         graphics.DrawText(canvas, self.big_font, 12, 25, self.black, "GAME OVER")
         self.matrix.SwapOnVSync(canvas)
-        if blocking:
-            while not self.stop:
-                time.sleep(0.1)
 
+    def clear(self):
+        canvas = self.matrix.CreateFrameCanvas()
+        canvas.Clear()
 
     def get_encouraging_message(self):
         potential_messages = [

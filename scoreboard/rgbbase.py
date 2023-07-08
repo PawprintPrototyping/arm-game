@@ -48,7 +48,7 @@ class RGBBase(object):
         options = RGBMatrixOptions()
 
         if self.args.led_gpio_mapping != None:
-          options.hardware_mapping = self.args.led_gpio_mapping
+            options.hardware_mapping = self.args.led_gpio_mapping
         options.rows = self.args.led_rows
         options.cols = self.args.led_cols
         options.chain_length = self.args.led_chain
