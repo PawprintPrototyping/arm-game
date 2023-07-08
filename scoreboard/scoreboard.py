@@ -115,6 +115,7 @@ class Scoreboard(RGBBase):
     def clear(self):
         canvas = self.matrix.CreateFrameCanvas()
         canvas.Clear()
+        self.matrix.SwapOnVSync(canvas)
 
     def get_encouraging_message(self):
         potential_messages = [

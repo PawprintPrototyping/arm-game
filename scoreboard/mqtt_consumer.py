@@ -65,4 +65,8 @@ if __name__ == "__main__":
     mqttc.connect(host=MQTT_HOST)
     rgb_matrix.delay_thread = threading.Thread(target=rgb_matrix.process)
     rgb_matrix.delay_thread.start()
-    mqttc.loop_forever()
+    try:
+        mqttc.loop_forever()
+    except KeyboardInterrupt:
+        rgb_matrix.stop = True
+        rgb_matrix.delay_thread.join(timeout=2)
