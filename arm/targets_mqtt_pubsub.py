@@ -52,7 +52,7 @@ def on_message(client, targetserial, msg):
 
     match = TOPIC_REGEX.match(msg.topic)
 
-    match match['topic']:
+    match match['command']:
         case "enable":
             log.debug(f"Set target {match['id']} to enabled")
             targetserial.target_id = match['id']
@@ -64,7 +64,7 @@ def on_message(client, targetserial, msg):
         case "clear":
             log.debug(f"Set target {match['id']} to clear")
             targetserial.target_id = match['id']
-            targetserial.command = TargetSerial.COMMAND_ENABLE
+            targetserial.command = TargetSerial.COMMAND_CLEAR
 
 
 mqttc = mqtt.Client()
@@ -74,15 +74,14 @@ mqttc.on_message = on_message
 
 if __name__ == "__main__":
     try:
-        ts = TargetSerial(DEVICE, BAUDRATE, timeout=10)
-        ts.setup()
+        ts = TargetSerial(DEVICE, BAUDRATE, timeout=5)
         mqttc.user_data_set(ts)
         mqttc.connect(host=MQTT_HOST)
         ts.thread.start()
         while ts.thread.is_alive():
-            mqttc.loop()
+            mqttc.loop(0.05)
     except KeyboardInterrupt:
         log.info("Shutting down target handler gracefully....")
         ts.stop = True
         ts.thread.join(timeout=5)
-        ts.close()
+        ts.ser.close()

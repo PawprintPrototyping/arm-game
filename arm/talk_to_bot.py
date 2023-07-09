@@ -35,8 +35,8 @@ STARTUP_SCRIPT = b"""speed 100
 """
 
 ROBOT_LOCATIONS = ["p1", "p2", "p3", "p4", "p5"]
-TARGET_IDS = [1, 2, 3]
-
+#TARGET_IDS = [1, 2, 3]
+TARGET_IDS = [2]
 
 class SerialBase(object):
     def __init__(self, *args, **kwargs):
@@ -54,28 +54,32 @@ class SerialBase(object):
         pass
 
     def write(self, data):
-        logger.info("write", data=data)
+        logger.debug("write", data=data)
         self.ser.write(data)
         return self.readline()
 
     def readline(self):
         line = self.ser.readline()
-        logger.info("readline", line=line)
+        logger.debug("readline", line=line)
         return line
+
+    def close(self):
+        self.ser.close()
 
 
 class TargetSerial(SerialBase):
-    COMMAND_CLEAR = b"clear \n"
-    COMMAND_ENABLE = b"enable {index}\n"
-    COMMAND_DISABLE = b"disable {index}\n"
-    COMMAND_POLL = b"poll {index}\n"
-    STATE_HIT = b"hit"
-    STATE_UNHIT = b"unhit"
+    COMMAND_CLEAR = "clear {index}\n"
+    COMMAND_ENABLE = "enable {index}\n"
+    COMMAND_DISABLE = "disable {index}\n"
+    COMMAND_POLL = "poll {index}\n"
+    STATE_HIT = b"2"
+    STATE_UNHIT = b"0"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.command = None
         self.target_id = None
+        self.score = 0
 
     def run(self):
         while not self.stop:
@@ -93,18 +97,25 @@ class TargetSerial(SerialBase):
                 state = self.poll(idx)
                 if state:
                     self.publish_hit(idx)
+                    self.clear(idx)
                 time.sleep(0.02)
 
     def publish_hit(self, index):
-        mqtt.single(f"/targets/{index}/hit", b"", hostname=MQTT_HOSTNAME)
+        log.info("Publish hit for target", target=index)
+        mqtt.single(f"/targets/{index}/hit", f"hit {index}", hostname=MQTT_HOSTNAME)
+        self.score += 5
+        log.info("Current score", score=self.score)
+        mqtt.single(f"/scoreboard/digits/set_number", json.dumps({"number":self.score}), hostname=MQTT_HOSTNAME)
 
     def poll(self, index):
-        self.write(f"poll {index}".encode("latin1"))
-        line = self.readline()
-        logger.info(line)
+        log.debug("Writing poll command", index=index)
+        self.ser.write(f"poll {index}".encode("latin1"))
+        log.debug("Reading response")
+        line = self.ser.read(12)
+        log.debug("read(12)", line=line)
         idx, cmd, state, hit = line.split()
-        logger.debug("Target poll", index=index, hit=hit)
-        if index != idx:
+        logger.debug("Target poll", index=index, hit=hit, state=state)
+        if index != int(idx):
             return None
         if hit == TargetSerial.STATE_HIT:
             return True
@@ -112,16 +123,13 @@ class TargetSerial(SerialBase):
             return False
 
     def enable(self, index):
-        self.write(TargetSerial.COMMAND_ENABLE.format(index=index))
-        return self.readline()
+        return self.write(TargetSerial.COMMAND_ENABLE.format(index=index).encode("latin1"))
 
     def disable(self, index):
-        self.write(TargetSerial.COMMAND_DISABLE.format(index=index))
-        return self.readline()
+        return self.write(TargetSerial.COMMAND_DISABLE.format(index=index).encode("latin1"))
 
     def clear(self, index):
-        self.write(TargetSerial.COMMAND_CLEAR.format(index=index))
-        return self.readline()
+        return self.write(TargetSerial.COMMAND_CLEAR.format(index=index).encode("latin1"))
 
     def poll_and_clear(self, index):
         state = self.poll(index)
