@@ -45,9 +45,10 @@ def on_message(client, flipdigits, msg):
             flipdigits.clear()
         case "/scoreboard/digits/set_number":
             delay = data.get("delay", 0)
-            if "number" in data:
+            number = data.get("number")
+            if number:
                 flipdigits.delay_thread = threading.Thread(
-                    target=flipdigits.set_number, args=(delay,)
+                    target=flipdigits.set_number, args=(number, delay)
                 )
                 flipdigits.delay_thread.start()
             else:
