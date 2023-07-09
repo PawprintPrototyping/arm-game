@@ -1,0 +1,2 @@
+class TargetMovement(object):
+    pass
