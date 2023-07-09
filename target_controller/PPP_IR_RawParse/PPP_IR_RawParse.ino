@@ -164,7 +164,7 @@ void cmdPoll() {
   String hitMsg = "0";
   if (hitStat) {
     //hitMsg = "hit";
-    hitMsg = "2";
+    hitMsg = "1";
   }
   //String respStr = String(id) + " poll " + enabledMsg + " " + hitMsg + " " + lastHit + " " + millis(); // mmm yess, very efficiency
   String respStr = String(id) + " poll " + enabledMsg + " " + hitMsg;
