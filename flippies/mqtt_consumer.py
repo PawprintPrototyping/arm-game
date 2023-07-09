@@ -40,8 +40,8 @@ def on_message(client, flipdigits, msg):
 
     match msg.topic:
         case "/scoreboard/digits/clear":
-            flipdigits.stop = True
-            flipdigits.delay_thread.join()
+            if flipdigits.delay_thread.is_alive():
+                flipdigits.delay_thread.join()
             flipdigits.clear()
         case "/scoreboard/digits/set_number":
             delay = data.get("delay", 0)
