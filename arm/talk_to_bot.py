@@ -28,7 +28,6 @@ ROBOT_BAUDRATE = int(os.environ.get("BAUDRATE", "38400"))
 TARGETS_DEVICE = os.environ.get(
     "TARGETS_DEVICE", "/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_A50285BI-if00-port0"
 )
-TARGETS_BAUDRATE = int(os.environ.get("TARGETS_BAUDRATE", "9600"))
 MQTT_HOSTNAME = os.environ.get("MQTT_HOST", "arm-display")
 
 STARTUP_SCRIPT = b"""speed 100
@@ -72,7 +71,7 @@ class TargetSerial(SerialBase):
     COMMAND_ENABLE = "enable {index}\n"
     COMMAND_DISABLE = "disable {index}\n"
     COMMAND_POLL = "poll {index}\n"
-    STATE_HIT = b"2"
+    STATE_HIT = b"1"
     STATE_UNHIT = b"0"
 
     def __init__(self, *args, **kwargs):
@@ -98,7 +97,7 @@ class TargetSerial(SerialBase):
                 if state:
                     self.publish_hit(idx)
                     self.clear(idx)
-                time.sleep(0.02)
+                time.sleep(0.06)
 
     def publish_hit(self, index):
         log.info("Publish hit for target", target=index)
@@ -109,7 +108,7 @@ class TargetSerial(SerialBase):
 
     def poll(self, index):
         log.debug("Writing poll command", index=index)
-        self.ser.write(f"poll {index}".encode("latin1"))
+        self.ser.write(f"poll {index}\n".encode("latin1"))
         log.debug("Reading response")
         line = self.ser.read(12)
         log.debug("read(12)", line=line)

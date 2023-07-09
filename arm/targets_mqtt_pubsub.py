@@ -12,7 +12,7 @@ from talk_to_bot import TargetSerial
 MQTT_HOST = os.getenv("MQTT_HOST", "localhost")
 DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "t")
 DEVICE = os.getenv("DEVICE", "/dev/ttyUSB1")
-BAUDRATE = int(os.getenv("BAUDRATE", "9600"))
+BAUDRATE = int(os.getenv("BAUDRATE", "115200"))
 
 TOPIC_REGEX = re.compile(r"^/targets/(?P<id>\d)/(?P<command>.*)$")
 
