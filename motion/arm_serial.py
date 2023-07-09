@@ -4,31 +4,30 @@ import time
 
 from motion.serial_base import SerialBase
 
-logger = structlog.get_logger()
-
-STARTUP_SCRIPT = b"""speed 100
-"""
-ROBOT_LOCATIONS = ["p1", "p2", "p3", "p4", "p5"]
-
 
 class ArmSerial(SerialBase):
+    logger = structlog.get_logger()
+    STARTUP_SCRIPT = b"""speed 100
+    """
+    ROBOT_LOCATIONS = ["p1", "p2", "p3", "p4", "p5"]
+
     IDLE = "idle"
     ACTIVE = "active"
 
     def __init__(self, *args, **kwargs):
-        logger.debug("Opening robot serial", args=args, kwargs=kwargs)
+        ArmSerial.logger.debug("Opening robot serial", args=args, kwargs=kwargs)
         super().__init__(*args, **kwargs)
         self.state = ArmSerial.IDLE
         self.location = None
 
     def setup(self):
         self.assert_ash_prompt()
-        self.write(STARTUP_SCRIPT)
+        self.write(ArmSerial.STARTUP_SCRIPT)
 
     def get_random_location(self):
         new_location = self.location
         while self.location == new_location:
-            new_location = random.choice(ROBOT_LOCATIONS)
+            new_location = random.choice(ArmSerial.ROBOT_LOCATIONS)
         self.location = new_location
         return new_location
 
@@ -42,9 +41,9 @@ class ArmSerial(SerialBase):
     def assert_ash_prompt(self):
         self.ser.write(b'\n')
         prompt = self.ser.readline()
-        logger.info("assert_ash_prompt readline()", prompt=prompt)
+        ArmSerial.logger.info("assert_ash_prompt readline()", prompt=prompt)
         prompt += self.ser.read(6)
-        logger.info("assert_ash_prompt readline()", prompt=prompt)
+        ArmSerial.logger.info("assert_ash_prompt readline()", prompt=prompt)
         if prompt != b"\r\ntest> ":
             print(f"Not in an ash!  (got '{prompt}' but expected 'test> ')")
             assert False
@@ -64,7 +63,7 @@ class ArmSerial(SerialBase):
     def finish(self, location):
         prompt = self.write(f"move {location}\n".encode('latin1'))
         if prompt == b'S: Arm power is OFF\r\n':
-            logger.error("Unable to move, Arm power is OFF!")
+            ArmSerial.logger.error("Unable to move, Arm power is OFF!")
             self.state = ArmSerial.IDLE
             return
 
@@ -73,7 +72,7 @@ class ArmSerial(SerialBase):
         prompt = b""
         while prompt != b"test> ":
             prompt += self.ser.read()
-        logger.info("read()", prompt=prompt)
+        ArmSerial.logger.info("read()", prompt=prompt)
 
     def close(self):
         self.ser.close()

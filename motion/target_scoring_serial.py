@@ -5,14 +5,12 @@ import structlog
 from paho.mqtt import publish as mqtt
 from motion.serial_base import SerialBase
 
-logger = structlog.get_logger()
-log = structlog.getLogger(__name__)
-
-# TARGET_IDS = [1, 2, 3]
-TARGET_IDS = [2]
-
 
 class TargetScoringSerial(SerialBase):
+    logger = structlog.get_logger()
+
+    # TARGET_IDS = [1, 2, 3]
+    TARGET_IDS = [2]
     COMMAND_CLEAR = "clear {index}\n"
     COMMAND_ENABLE = "enable {index}\n"
     COMMAND_DISABLE = "disable {index}\n"
@@ -38,7 +36,7 @@ class TargetScoringSerial(SerialBase):
             self.command = None
             time.sleep(0.02)
 
-            for idx in TARGET_IDS:
+            for idx in TargetScoringSerial.TARGET_IDS:
                 state = self.poll(idx)
                 if state:
                     self.publish_hit(idx)
@@ -46,20 +44,20 @@ class TargetScoringSerial(SerialBase):
                 time.sleep(0.06)
 
     def publish_hit(self, index):
-        log.info("Publish hit for target", target=index)
+        TargetScoringSerial.logger.info("Publish hit for target", target=index)
         mqtt.single(f"/targets/{index}/hit", f"hit {index}", hostname=MQTT_HOSTNAME)
         self.score += 5
-        log.info("Current score", score=self.score)
+        TargetScoringSerial.logger.info("Current score", score=self.score)
         mqtt.single(f"/scoreboard/digits/set_number", json.dumps({"number":self.score}), hostname=MQTT_HOSTNAME)
 
     def poll(self, index):
-        log.debug("Writing poll command", index=index)
+        TargetScoringSerial.logger.debug("Writing poll command", index=index)
         self.ser.write(f"poll {index}\n".encode("latin1"))
-        log.debug("Reading response")
+        TargetScoringSerial.logger.debug("Reading response")
         line = self.ser.read(12)
-        log.debug("read(12)", line=line)
+        TargetScoringSerial.logger.debug("read(12)", line=line)
         idx, cmd, state, hit = line.split()
-        logger.debug("Target poll", index=index, hit=hit, state=state)
+        TargetScoringSerial.logger.debug("Target poll", index=index, hit=hit, state=state)
         if index != int(idx):
             return None
         if hit == TargetScoringSerial.STATE_HIT:

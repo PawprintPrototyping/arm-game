@@ -3,9 +3,8 @@ import logging
 import os
 import sys
 import traceback
-
-import paho.mqtt.client as mqtt
 import structlog
+import paho.mqtt.client as mqtt
 
 from motion.arm_serial import ArmSerial
 
