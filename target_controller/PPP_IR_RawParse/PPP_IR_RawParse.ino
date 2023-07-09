@@ -76,7 +76,7 @@ void setup() {
   id = id | (digitalRead(idPin1) ^ 1) << 1;
   id = id | (digitalRead(idPin2) ^ 1) << 2;
   id = id | (digitalRead(idPin3) ^ 1) << 3;
-
+  
   // Why not just do `String str = "stuff " + id`?
   // Because that causes the beginning of the string to get munched.
   // I'm sure there's a clear and logical reason why, but fuck if I know what it is.
@@ -92,12 +92,12 @@ void setup() {
   clearCmdStr = "clear ";
   clearCmdStr += id;
   //Serial.println(clearCmdStr);
-
+  
   Timer1.initialize(bitDuration);
   Timer1.attachInterrupt(timerHandler);
 
   //digitalWrite(max485DriverEnablePin, HIGH);
-
+  
   enableMax485Driver();
   Serial.println(String(id) + " henlo");
   disableMax485Driver();
@@ -154,13 +154,17 @@ void timerHandler() {
 
 // Expected usage: "poll <int id>"
 void cmdPoll() {
-  String enabledMsg = "off";
+  //String enabledMsg = "off";
+  String enabledMsg = "0";
   if (enabled) {
-    enabledMsg = "on";
+    //enabledMsg = "on";
+    enabledMsg = "1";
   }
-  String hitMsg = "unhit"; // Is there a better word for this?...
+  //String hitMsg = "unhit"; // Is there a better word for this?...
+  String hitMsg = "0";
   if (hitStat) {
-    hitMsg = "hit";
+    //hitMsg = "hit";
+    hitMsg = "2";
   }
   //String respStr = String(id) + " poll " + enabledMsg + " " + hitMsg + " " + lastHit + " " + millis(); // mmm yess, very efficiency
   String respStr = String(id) + " poll " + enabledMsg + " " + hitMsg;
