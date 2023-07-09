@@ -67,7 +67,7 @@ if __name__ == "__main__":
     rgb_matrix.delay_thread.start()
     try:
         while rgb_matrix.delay_thread.is_alive():
-            mqttc.loop()
+            mqttc.loop(0.05)
     except KeyboardInterrupt:
         rgb_matrix.stop = True
         rgb_matrix.delay_thread.join(timeout=2)
