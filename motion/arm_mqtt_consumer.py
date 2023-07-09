@@ -2,13 +2,12 @@ import json
 import logging
 import os
 import sys
-import threading
 import traceback
 
 import paho.mqtt.client as mqtt
 import structlog
 
-from talk_to_bot import RobotSerial
+from motion.arm_serial import ArmSerial
 
 MQTT_HOST = os.getenv("MQTT_HOST", "localhost")
 DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "t")
@@ -31,10 +30,12 @@ def on_connect(client, userdata, flags_dict, result):
     )
     client.subscribe(f"/motion/motion/#")
 
+
 """
 /motion/motion/start
 /motion/motion/stop
 """
+
 
 def on_message(client, robotserial, msg):
     log.debug("on_message", robotserial=robotserial, topic=msg.topic, payload=msg.payload)
@@ -47,16 +48,17 @@ def on_message(client, robotserial, msg):
     match msg.topic:
         case "/motion/motion/start":
             log.debug("Set robot motion state to active")
-            rs.state = RobotSerial.ACTIVE
+            arm_serial.state = ArmSerial.ACTIVE
         case "/motion/motion/stop":
             log.debug("Set robot motion state to idle")
-            rs.state = RobotSerial.IDLE
+            arm_serial.state = ArmSerial.IDLE
 
 
 mqttc = mqtt.Client()
 mqttc.enable_logger(log)
 mqttc.on_connect = on_connect
 mqttc.on_message = on_message
+
 
 def excepthook(args):
     log.error("Exception in child thread.", args=args)
@@ -66,22 +68,22 @@ def excepthook(args):
     log.debug(locals())
     if "rs" in globals():
         # Gracefully shutdown
-        rs.close()
+        arm_serial.close()
         sys.exit()
 
 
 if __name__ == "__main__":
     try:
-        rs = RobotSerial(DEVICE, BAUDRATE, timeout=10)
-        rs.setup()
-        mqttc.user_data_set(rs)
+        arm_serial = ArmSerial(DEVICE, BAUDRATE, timeout=10)
+        arm_serial.setup()
+        mqttc.user_data_set(arm_serial)
         mqttc.connect(host=MQTT_HOST)
-        #threading.excepthook = excepthook
-        rs.thread.start()
-        while rs.thread.is_alive():
+        # threading.excepthook = excepthook
+        arm_serial.thread.start()
+        while arm_serial.thread.is_alive():
             mqttc.loop()
     except KeyboardInterrupt:
         log.info("Shutting down motion motion control gracefully....")
-        rs.stop = True
-        rs.thread.join(timeout=5)
-        rs.close()
+        arm_serial.stop = True
+        arm_serial.thread.join(timeout=5)
+        arm_serial.close()

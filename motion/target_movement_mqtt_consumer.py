@@ -2,11 +2,10 @@ import json
 import logging
 import os
 import re
-
-import paho.mqtt.client as mqtt
 import structlog
+import paho.mqtt.client as mqtt
 
-from motion.talk_to_bot import TargetMovementSerial
+from motion.target_movement_serial import TargetMovementSerial
 
 MQTT_HOST = os.getenv("MQTT_HOST", "motion-display")
 DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "t")

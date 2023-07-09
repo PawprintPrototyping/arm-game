@@ -2,12 +2,10 @@ import json
 import logging
 import os
 import re
-import threading
-
-import paho.mqtt.client as mqtt
 import structlog
+import paho.mqtt.client as mqtt
 
-from talk_to_bot import TargetSerial
+from motion.target_scoring_serial import TargetScoringSerial
 
 MQTT_HOST = os.getenv("MQTT_HOST", "localhost")
 DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "t")
@@ -32,6 +30,7 @@ def on_connect(client, userdata, flags_dict, result):
     )
     client.subscribe(f"/targets/#")
 
+
 """
 Subscribes to:
 /targets/{id}/enable
@@ -41,7 +40,6 @@ Subscribes to:
 Publishes to:
 /targets/{id}/hit
 """
-
 def on_message(client, targetserial, msg):
     log.debug("on_message", targetserial=targetserial, topic=msg.topic, payload=msg.payload)
     data = {}
@@ -56,15 +54,15 @@ def on_message(client, targetserial, msg):
         case "enable":
             log.debug(f"Set target {match['id']} to enabled")
             targetserial.target_id = match['id']
-            targetserial.command = TargetSerial.COMMAND_ENABLE
+            targetserial.command = TargetScoringSerial.COMMAND_ENABLE
         case "disable":
             log.debug(f"Set target {match['id']} to disabled")
             targetserial.target_id = match['id']
-            targetserial.command = TargetSerial.COMMAND_DISABLE
+            targetserial.command = TargetScoringSerial.COMMAND_DISABLE
         case "clear":
             log.debug(f"Set target {match['id']} to clear")
             targetserial.target_id = match['id']
-            targetserial.command = TargetSerial.COMMAND_CLEAR
+            targetserial.command = TargetScoringSerial.COMMAND_CLEAR
 
 
 mqttc = mqtt.Client()
@@ -74,7 +72,7 @@ mqttc.on_message = on_message
 
 if __name__ == "__main__":
     try:
-        ts = TargetSerial(DEVICE, BAUDRATE, timeout=5)
+        ts = TargetScoringSerial(DEVICE, BAUDRATE, timeout=5)
         mqttc.user_data_set(ts)
         mqttc.connect(host=MQTT_HOST)
         ts.thread.start()
