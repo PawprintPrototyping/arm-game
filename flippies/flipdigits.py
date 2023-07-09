@@ -70,7 +70,10 @@ log = structlog.getLogger(__name__)
 
 class FlipDigits(object):
     def __init__(self, *args, **kwargs):
-        self._debug = kwargs.pop("debug")
+        try:
+            self._debug = kwargs.pop("debug")
+        except KeyError:
+            self._debug = False
         self.stop = False
         self.delay_thread = threading.Thread()
         if self._debug:
