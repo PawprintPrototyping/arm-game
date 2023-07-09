@@ -29,11 +29,11 @@ def on_connect(client, userdata, flags_dict, result):
         flags_dict=flags_dict,
         result=result,
     )
-    client.subscribe(f"/arm/motion/#")
+    client.subscribe(f"/motion/motion/#")
 
 """
-/arm/motion/start
-/arm/motion/stop
+/motion/motion/start
+/motion/motion/stop
 """
 
 def on_message(client, robotserial, msg):
@@ -45,10 +45,10 @@ def on_message(client, robotserial, msg):
         log.warn("Payload is not valid JSON", mqtt_msg=msg.payload)
 
     match msg.topic:
-        case "/arm/motion/start":
+        case "/motion/motion/start":
             log.debug("Set robot motion state to active")
             rs.state = RobotSerial.ACTIVE
-        case "/arm/motion/stop":
+        case "/motion/motion/stop":
             log.debug("Set robot motion state to idle")
             rs.state = RobotSerial.IDLE
 
@@ -81,7 +81,7 @@ if __name__ == "__main__":
         while rs.thread.is_alive():
             mqttc.loop()
     except KeyboardInterrupt:
-        log.info("Shutting down arm motion control gracefully....")
+        log.info("Shutting down motion motion control gracefully....")
         rs.stop = True
         rs.thread.join(timeout=5)
         rs.close()

@@ -1,15 +1,14 @@
 import json
 import logging
 import os
-import threading
 import re
 
 import paho.mqtt.client as mqtt
 import structlog
 
-from arm.talk_to_bot import TargetMovementSerial
+from motion.talk_to_bot import TargetMovementSerial
 
-MQTT_HOST = os.getenv("MQTT_HOST", "arm-display")
+MQTT_HOST = os.getenv("MQTT_HOST", "motion-display")
 DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "t")
 DEVICE = os.getenv("DEVICE", "/dev/ttyUSB2")
 BAUDRATE = int(os.getenv("BAUDRATE", "9600"))
