@@ -1,19 +1,24 @@
 #!/usr/bin/env python
+import json
 import os
 import threading
 import logging
 import structlog
+import time
+import random
+
+from paho import mqtt
+from rgbbase import RGBBase
 
 DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "t")
+MQTT_HOSTNAME = os.getenv("MQTT_HOSTNAME", "localhost")
 
-from rgbbase import RGBBase
 if DEBUG:
     from RGBMatrixEmulator import graphics
 else:
     from rgbmatrix import graphics
 
-import time
-import random
+
 
 DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "t")
 
@@ -105,6 +110,8 @@ class Scoreboard(RGBBase):
 
             timer_seconds = 59
 
+        self.state = Scoreboard.GAME_OVER
+
         #graphics.DrawCircle(canvas, 15, 15, 10, green)
 
     def game_over(self, blocking=False):
@@ -113,6 +120,7 @@ class Scoreboard(RGBBase):
         canvas.Fill(255, 0, 0)
         graphics.DrawText(canvas, self.big_font, 12, 25, self.black, "GAME OVER")
         self.matrix.SwapOnVSync(canvas)
+        mqtt.single(f"/scoreboard/timer/game_over", "GAME OVER", hostname=MQTT_HOSTNAME)
 
     def clear(self):
         canvas = self.matrix.CreateFrameCanvas()
