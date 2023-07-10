@@ -29,6 +29,7 @@ def on_connect(client, userdata, flags_dict, result):
         result=result,
     )
     client.subscribe(f"/targets/#")
+    client.subscribe(f"/scoreboard/rgb/start_timer")
 
 
 """
@@ -47,6 +48,10 @@ def on_message(client, targetserial, msg):
         data = json.loads(msg.payload.decode("utf8"))
     except json.JSONDecodeError:
         log.warn("Payload is not valid JSON", mqtt_msg=msg.payload)
+
+    if msg.topic == "/scoreboard/rgb/start_timer":
+        targetserial.score = 0
+        return
 
     match = TOPIC_REGEX.match(msg.topic)
 
