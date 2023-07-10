@@ -80,9 +80,9 @@ class Scoreboard(RGBBase):
         encouraging_color = random.choice(message_colors)
 
         #graphics.DrawLine(canvas, 5, 5, 22, 13, red)
-        for minutes in range(timer_minutes+1, -1, -1):
+        for minutes in range(timer_minutes, -1, -1):
             # FIXME: Can't actually set seconds here
-            for seconds in range(timer_seconds+1, -1, -1):
+            for seconds in range(timer_seconds, -1, -1):
                 if seconds % 7 == 0:
                     encouraging_message = self.get_encouraging_message()
                     encouraging_color = random.choice(message_colors)
@@ -95,7 +95,7 @@ class Scoreboard(RGBBase):
                     if minutes == 0 and seconds < 30:
                         color = red
 
-                    graphics.DrawText(canvas, self.font, 1, 25, color, f"{minutes-1:>2}:{seconds-1:>02}{'.' if sep == ':' else ' '}{dsec}")
+                    graphics.DrawText(canvas, self.font, 1, 25, color, f"{minutes:>2}:{seconds:>02}{'.' if sep == ':' else ' '}{dsec}")
                     graphics.DrawText(canvas, self.small_font, 75, 22, encouraging_color, encouraging_message)
 
                     canvas = self.matrix.SwapOnVSync(canvas)
