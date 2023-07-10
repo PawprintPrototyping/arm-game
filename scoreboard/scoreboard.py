@@ -6,8 +6,8 @@ import logging
 import structlog
 import time
 import random
+import paho.mqtt.client as mqtt
 
-from paho import mqtt
 from rgbbase import RGBBase
 
 DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "t")
@@ -121,6 +121,7 @@ class Scoreboard(RGBBase):
         graphics.DrawText(canvas, self.big_font, 12, 25, self.black, "GAME OVER")
         self.matrix.SwapOnVSync(canvas)
         mqtt.single(f"/scoreboard/timer/game_over", "GAME OVER", hostname=MQTT_HOSTNAME)
+        time.sleep()
 
     def clear(self):
         canvas = self.matrix.CreateFrameCanvas()
