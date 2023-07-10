@@ -82,7 +82,7 @@ class Scoreboard(RGBBase):
         #graphics.DrawLine(canvas, 5, 5, 22, 13, red)
         for minutes in range(timer_minutes, -1, -1):
             # FIXME: Can't actually set seconds here
-            for seconds in range(60, -1, -1):
+            for seconds in range(1, -1, -1):
                 if seconds % 7 == 0:
                     encouraging_message = self.get_encouraging_message()
                     encouraging_color = random.choice(message_colors)
