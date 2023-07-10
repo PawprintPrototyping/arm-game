@@ -1,19 +1,24 @@
 #!/usr/bin/env python
+import json
 import os
 import threading
 import logging
 import structlog
+import time
+import random
+
+from paho.mqtt import publish as mqtt
+from rgbbase import RGBBase
 
 DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "t")
+MQTT_HOSTNAME = os.getenv("MQTT_HOSTNAME", "localhost")
 
-from rgbbase import RGBBase
 if DEBUG:
     from RGBMatrixEmulator import graphics
 else:
     from rgbmatrix import graphics
 
-import time
-import random
+
 
 DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "t")
 
@@ -33,7 +38,7 @@ class Scoreboard(RGBBase):
 
         self.state = Scoreboard.IDLE
         self.minutes = kwargs.get("minutes", 1)
-        self.seconds = kwargs.get("seconds", 1)
+        self.seconds = kwargs.get("seconds", 0)
         self.stop = False
         self.pause = False
         self.delay_thread = threading.Thread()
@@ -82,7 +87,7 @@ class Scoreboard(RGBBase):
         #graphics.DrawLine(canvas, 5, 5, 22, 13, red)
         for minutes in range(timer_minutes, -1, -1):
             # FIXME: Can't actually set seconds here
-            for seconds in range(1, -1, -1):
+            for seconds in range(timer_seconds, -1, -1):
                 if seconds % 7 == 0:
                     encouraging_message = self.get_encouraging_message()
                     encouraging_color = random.choice(message_colors)
@@ -103,6 +108,10 @@ class Scoreboard(RGBBase):
                     if self.state != Scoreboard.TIMER:
                         return
 
+            timer_seconds = 59
+
+        self.state = Scoreboard.GAME_OVER
+
         #graphics.DrawCircle(canvas, 15, 15, 10, green)
 
     def game_over(self, blocking=False):
@@ -111,6 +120,7 @@ class Scoreboard(RGBBase):
         canvas.Fill(255, 0, 0)
         graphics.DrawText(canvas, self.big_font, 12, 25, self.black, "GAME OVER")
         self.matrix.SwapOnVSync(canvas)
+        mqtt.single(f"/scoreboard/timer/game_over", "GAME OVER", hostname=MQTT_HOSTNAME)
 
     def clear(self):
         canvas = self.matrix.CreateFrameCanvas()
