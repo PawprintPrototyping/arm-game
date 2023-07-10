@@ -3,7 +3,7 @@ import time
 import structlog
 
 from paho.mqtt import publish as mqtt
-from motion.serial_base import SerialBase
+from serial_base import SerialBase
 
 
 class TargetScoringSerial(SerialBase):

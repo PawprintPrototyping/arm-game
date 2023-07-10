@@ -1,6 +1,6 @@
 import time
 
-from motion.serial_base import SerialBase
+from serial_base import SerialBase
 
 
 class TargetMovementSerial(SerialBase):

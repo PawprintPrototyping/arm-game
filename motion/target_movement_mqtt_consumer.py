@@ -5,7 +5,7 @@ import re
 import structlog
 import paho.mqtt.client as mqtt
 
-from motion.target_movement_serial import TargetMovementSerial
+from target_movement_serial import TargetMovementSerial
 
 MQTT_HOST = os.getenv("MQTT_HOST", "motion-display")
 DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "t")

@@ -5,7 +5,7 @@ import re
 import structlog
 import paho.mqtt.client as mqtt
 
-from motion.target_scoring_serial import TargetScoringSerial
+from target_scoring_serial import TargetScoringSerial
 
 MQTT_HOST = os.getenv("MQTT_HOST", "localhost")
 DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "t")

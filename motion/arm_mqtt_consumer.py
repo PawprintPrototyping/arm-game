@@ -6,7 +6,7 @@ import traceback
 import structlog
 import paho.mqtt.client as mqtt
 
-from motion.arm_serial import ArmSerial
+from arm_serial import ArmSerial
 
 MQTT_HOST = os.getenv("MQTT_HOST", "localhost")
 DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "t")
