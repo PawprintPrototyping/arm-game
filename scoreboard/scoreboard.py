@@ -38,7 +38,7 @@ class Scoreboard(RGBBase):
 
         self.state = Scoreboard.IDLE
         self.minutes = kwargs.get("minutes", 1)
-        self.seconds = kwargs.get("seconds", 1)
+        self.seconds = kwargs.get("seconds", 0)
         self.stop = False
         self.pause = False
         self.delay_thread = threading.Thread()
@@ -121,7 +121,6 @@ class Scoreboard(RGBBase):
         graphics.DrawText(canvas, self.big_font, 12, 25, self.black, "GAME OVER")
         self.matrix.SwapOnVSync(canvas)
         mqtt.single(f"/scoreboard/timer/game_over", "GAME OVER", hostname=MQTT_HOSTNAME)
-        time.sleep()
 
     def clear(self):
         canvas = self.matrix.CreateFrameCanvas()
