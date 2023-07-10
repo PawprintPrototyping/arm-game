@@ -123,7 +123,12 @@ class Scoreboard(RGBBase):
           "Shoot that robot!",
           "Seeya, space cowboy",
           "[Encouraging Message 4]",
-          "Sharp shootin', Tex"
+          "Sharp shootin', Tex",
+          "Bang!",
+          "You got me!",
+          "*dabs*",
+          "Now you're thinking with\nlasers!",
+          "*pew pew pew pew*",
         ]
         return random.choice(potential_messages)
         
