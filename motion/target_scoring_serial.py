@@ -49,7 +49,10 @@ class TargetScoringSerial(SerialBase):
     def publish_hit(self, index):
         TargetScoringSerial.logger.info("Publish hit for target", target=index)
         mqtt.single(f"/targets/{index}/hit", f"hit {index}", hostname=MQTT_HOST)
-        self.score += 5
+        if index == 2:
+            self.score += 75
+        else:
+            self.score += 69
         TargetScoringSerial.logger.info("Current score", score=self.score)
         mqtt.single(f"/scoreboard/digits/set_number", json.dumps({"number":self.score}), hostname=MQTT_HOST)
 

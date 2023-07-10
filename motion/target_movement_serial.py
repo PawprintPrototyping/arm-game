@@ -7,8 +7,8 @@ class TargetMovementSerial(SerialBase):
     START_COMMAND = "start"
     STOP_COMMAND = "stop"
 
-    START_SERIAL_COMMAND = "flail\n"
-    STOP_SERIAL_COMMAND = "stop\n"
+    START_SERIAL_COMMAND = b"flail\n"
+    STOP_SERIAL_COMMAND = b"stop\n"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
