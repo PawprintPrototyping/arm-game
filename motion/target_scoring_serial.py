@@ -1,16 +1,19 @@
 import json
+import os
 import time
 import structlog
 
 from paho.mqtt import publish as mqtt
 from serial_base import SerialBase
 
+MQTT_HOST = os.getenv("MQTT_HOST", "localhost")
+
 
 class TargetScoringSerial(SerialBase):
     logger = structlog.get_logger()
 
     # TARGET_IDS = [1, 2, 3]
-    TARGET_IDS = [2]
+    TARGET_IDS = [3]
     COMMAND_CLEAR = "clear {index}\n"
     COMMAND_ENABLE = "enable {index}\n"
     COMMAND_DISABLE = "disable {index}\n"
@@ -45,10 +48,10 @@ class TargetScoringSerial(SerialBase):
 
     def publish_hit(self, index):
         TargetScoringSerial.logger.info("Publish hit for target", target=index)
-        mqtt.single(f"/targets/{index}/hit", f"hit {index}", hostname=MQTT_HOSTNAME)
+        mqtt.single(f"/targets/{index}/hit", f"hit {index}", hostname=MQTT_HOST)
         self.score += 5
         TargetScoringSerial.logger.info("Current score", score=self.score)
-        mqtt.single(f"/scoreboard/digits/set_number", json.dumps({"number":self.score}), hostname=MQTT_HOSTNAME)
+        mqtt.single(f"/scoreboard/digits/set_number", json.dumps({"number":self.score}), hostname=MQTT_HOST)
 
     def poll(self, index):
         TargetScoringSerial.logger.debug("Writing poll command", index=index)
