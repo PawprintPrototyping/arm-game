@@ -6,8 +6,8 @@ import logging
 import structlog
 import time
 import random
-import paho.mqtt.client as mqtt
 
+from paho.mqtt import publish as mqtt
 from rgbbase import RGBBase
 
 DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "t")
