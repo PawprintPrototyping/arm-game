@@ -1,10 +1,15 @@
 #!/bin/bash
-#set -x
+#set -eoxu pipefail
 
 PIN='4'
 ON_DURATION='0.02'
 DWELL_DURATION='0.25'
 MQTT_HOST="arm-display"
+
+trap quit SIGINT
+quit() {
+	exit
+}
 
 while [ 1 ]; do
   mosquitto_sub -h $MQTT_HOST \
