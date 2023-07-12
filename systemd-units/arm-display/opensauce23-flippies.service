@@ -1,0 +1,15 @@
+[Unit]
+Description=Opensauce23 Flip Digit MQTT Consumer
+After=syslog.target network.target
+
+[Service]
+Environment="MQTT_HOST=localhost"
+# Enabling debug will use the serial loopback device!!
+Environment="DEBUG=0"
+Environment="DEVICE=/dev/serial/by-id/usb-FTDI_Single_RS232-HS-if00-port0"
+ExecStart=/home/pi/opensauce23/venv/bin/python /home/pi/opensauce23/flippies/mqtt_consumer.py
+Type=simple
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

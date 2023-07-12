@@ -1,0 +1,15 @@
+[Unit]
+Description=Opensauce23 Scoreboard MQTT Consumer
+After=syslog.target network.target
+
+[Service]
+WorkingDirectory=/home/pi/opensauce23/scoreboard/
+Environment="MQTT_HOST=localhost"
+# Turning on debug will use serial loopback!!
+# Environment="DEBUG=0"
+ExecStart=/usr/bin/python /home/pi/opensauce23/scoreboard/mqtt_consumer.py --led-slowdown-gpio=2 --led-rows=32 --led-cols=64 --led-chain=3
+Type=simple
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
