@@ -1,3 +1,4 @@
 asyncio-paho==0.6.0
 pyserial
 structlog==23.1.0
+RPi.GPIO~=0.7.1

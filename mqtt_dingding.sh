@@ -12,6 +12,7 @@ while [ 1 ]; do
     -t /scoreboard/bell \
     -t /scoreboard/rgb/start_timer \
     -t /scoreboard/timer/game_over \
+    || exit
 
   if ! [ -e "/sys/class/gpio/gpio${PIN}/value" ] ; then
     echo "$PIN" > '/sys/class/gpio/export'
