@@ -2,6 +2,8 @@ import json
 import logging
 import os
 import re
+import time
+
 import structlog
 import paho.mqtt.client as mqtt
 
@@ -58,16 +60,13 @@ def on_message(client, targetserial, msg):
     match match['command']:
         case "enable":
             log.debug(f"Set target {match['id']} to enabled")
-            targetserial.target_id = match['id']
-            targetserial.command = TargetScoringSerial.COMMAND_ENABLE
+            targetserial.enqueue(TargetScoringSerial.COMMAND_ENABLE, match['id'])
         case "disable":
             log.debug(f"Set target {match['id']} to disabled")
-            targetserial.target_id = match['id']
-            targetserial.command = TargetScoringSerial.COMMAND_DISABLE
+            targetserial.enqueue(TargetScoringSerial.COMMAND_DISABLE, match['id'])
         case "clear":
             log.debug(f"Set target {match['id']} to clear")
-            targetserial.target_id = match['id']
-            targetserial.command = TargetScoringSerial.COMMAND_CLEAR
+            targetserial.enqueue(TargetScoringSerial.COMMAND_CLEAR, match['id'])
 
 
 mqttc = mqtt.Client()
