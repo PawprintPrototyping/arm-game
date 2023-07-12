@@ -1,0 +1,14 @@
+[Unit]
+Description=Opensauce23 Target Movement MQTT Service
+After=syslog.target network.target
+
+[Service]
+Environment="MQTT_HOST=arm-display"
+Environment="DEBUG=1"
+Environment="DEVICE=/dev/ttyACM0"
+ExecStart=/home/pi/opensauce23/venv/bin/python /home/pi/opensauce23/motion/target_movement_mqtt_consumer.py
+Type=simple
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,14 @@
+[Unit]
+Description=Opensauce23 Arm Controller MQTT Consumer
+After=syslog.target network.target
+
+[Service]
+Environment="MQTT_HOST=arm-display"
+Environment="DEBUG=1"
+Environment="DEVICE=/dev/ttyUSB2"
+ExecStart=/home/pi/opensauce23/venv/bin/python /home/pi/opensauce23/motion/arm_mqtt_consumer.py
+Type=simple
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

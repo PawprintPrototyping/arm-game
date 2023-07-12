@@ -11,6 +11,7 @@ from serial_base import SerialBase
 MQTT_HOST = os.getenv("MQTT_HOST", "localhost")
 logger = structlog.get_logger()
 
+
 class TargetScoringSerial(SerialBase):
 
 
@@ -31,7 +32,7 @@ class TargetScoringSerial(SerialBase):
 
     def enqueue(self, command, target_id):
         try:
-            self.queue.put_nowait({"command": command, "target_id": target_id})
+            self.command_queue.put_nowait({"command": command, "target_id": target_id})
         except queue.Full:
             logging.warning("Target serial command queue is full!")
 
@@ -40,7 +41,7 @@ class TargetScoringSerial(SerialBase):
             try:
                 cmd = self.command_queue.get_nowait()
             except queue.Empty:
-                cmd = None
+                cmd = {"command": None}
 
             match cmd["command"]:
                 case TargetScoringSerial.COMMAND_ENABLE:
@@ -52,7 +53,7 @@ class TargetScoringSerial(SerialBase):
             time.sleep(0.02)
 
             for idx in TargetScoringSerial.TARGET_IDS:
-                if self.command_queue.not_empty():
+                if not self.command_queue.empty():
                     break
                 state = self.poll(idx)
                 if state:

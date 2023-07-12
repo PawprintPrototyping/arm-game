@@ -17,9 +17,11 @@ BAUDRATE = int(os.getenv("BAUDRATE", "9600"))
 TOPIC_REGEX = re.compile(r"^/targets/(?P<id>\d)/(?P<command>.*)$")
 
 
+logging.basicConfig(level=logging.INFO)
 if DEBUG:
     logging.basicConfig(level=logging.DEBUG)
 log = structlog.getLogger(__name__)
+
 
 
 def on_connect(client, userdata, flags_dict, result):
