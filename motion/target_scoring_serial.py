@@ -12,8 +12,7 @@ MQTT_HOST = os.getenv("MQTT_HOST", "localhost")
 class TargetScoringSerial(SerialBase):
     logger = structlog.get_logger()
 
-    # TARGET_IDS = [1, 2, 3]
-    TARGET_IDS = [3]
+    TARGET_IDS = [1, 2, 3]
     COMMAND_CLEAR = "clear {index}\n"
     COMMAND_ENABLE = "enable {index}\n"
     COMMAND_DISABLE = "disable {index}\n"
