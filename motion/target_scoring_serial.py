@@ -13,8 +13,6 @@ logger = structlog.get_logger()
 
 
 class TargetScoringSerial(SerialBase):
-
-
     TARGET_IDS = [1, 2, 3]
     COMMAND_CLEAR = "clear {index}\n"
     COMMAND_ENABLE = "enable {index}\n"
@@ -29,6 +27,7 @@ class TargetScoringSerial(SerialBase):
         self.command = None
         self.target_id = None
         self.score = 0
+        self.player_info = {"name": "NO NAME"}
 
     def enqueue(self, command, target_id):
         try:
