@@ -17,7 +17,7 @@ DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "t")
 DEVICE = os.getenv("DEVICE", "/dev/ttyUSB1")
 BAUDRATE = int(os.getenv("BAUDRATE", "9600"))
 DATABASE = os.getenv("DATABASE", "/home/pi/scores.db")
-BELL_PIN = 4
+BELL_PIN = 7
 
 TOPIC_REGEX = re.compile(r"^/targets/(?P<id>\d)/(?P<command>.*)$")
 
@@ -31,7 +31,7 @@ GPIO.setmode(GPIO.BOARD)
 GPIO.setup(BELL_PIN, GPIO.OUT)
 
 def init_db():
-    db = sqlite3.connect(DATABASE)
+    db = sqlite3.connect(DATABASE, isolation_level=None)
     db.execute("CREATE TABLE IF NOT EXISTS scores(id INTEGER PRIMARY KEY, name TEXT, score INTEGER);")
     return db
 
@@ -61,10 +61,11 @@ Publishes to:
 
 
 def record_score(player_info, score):
+    log.info("record score", score=score, player_info=player_info)
     db.execute("INSERT INTO scores(name, score) VALUES (?, ?)", (player_info["name"], score))
 
 
-def get_high_score(score):
+def get_high_score():
     res = db.execute("SELECT MAX(score) FROM scores;")
     high_score = res.fetchone()[0]
     return high_score
@@ -97,7 +98,8 @@ def on_message(client, targetserial, msg):
 
     if msg.topic == "/scoreboard/timer/game_over":
         # Record high score and reset player info
-        record_score(targetserial.player_info, targetserial.score)
+        if targetserial.player_info["name"] != "NO NAME":
+            record_score(targetserial.player_info, targetserial.score)
         targetserial.player_info = {"name": "NO NAME"}
         high_score = get_high_score()
         if targetserial.score >= high_score:

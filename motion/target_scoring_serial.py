@@ -76,7 +76,12 @@ class TargetScoringSerial(SerialBase):
         TargetScoringSerial.logger.debug("Reading response")
         line = self.ser.read(12)
         TargetScoringSerial.logger.debug("read(12)", line=line)
-        idx, cmd, state, hit = line.split()
+        try:
+            idx, cmd, state, hit = line.split()
+        except ValueError:
+            logger.warn("Unable to unpack values")
+            return False
+
         logger.debug("Target poll", index=index, hit=hit, state=state)
         if index != int(idx):
             return None
