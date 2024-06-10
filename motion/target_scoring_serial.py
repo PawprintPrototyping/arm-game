@@ -13,8 +13,6 @@ logger = structlog.get_logger()
 
 
 class TargetScoringSerial(SerialBase):
-
-
     TARGET_IDS = [1, 2, 3]
     COMMAND_CLEAR = "clear {index}\n"
     COMMAND_ENABLE = "enable {index}\n"
@@ -29,6 +27,7 @@ class TargetScoringSerial(SerialBase):
         self.command = None
         self.target_id = None
         self.score = 0
+        self.player_info = {"name": "NO NAME"}
 
     def enqueue(self, command, target_id):
         try:
@@ -77,7 +76,12 @@ class TargetScoringSerial(SerialBase):
         TargetScoringSerial.logger.debug("Reading response")
         line = self.ser.read(12)
         TargetScoringSerial.logger.debug("read(12)", line=line)
-        idx, cmd, state, hit = line.split()
+        try:
+            idx, cmd, state, hit = line.split()
+        except ValueError:
+            logger.warn("Unable to unpack values")
+            return False
+
         logger.debug("Target poll", index=index, hit=hit, state=state)
         if index != int(idx):
             return None

@@ -1,0 +1,17 @@
+# Reload and trigger with:
+#   sudo udevadm control --reload-rules && sudo udevadm trigger
+# 
+# Test new devices by checking the output of:
+#   udevadm test -a add $(udevadm info -q path -n /dev/ttyACM0)
+
+# VT Terminal
+SUBSYSTEM=="tty", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", ATTRS{serial}=="A10MARDL", SYMLINK+="ttyTerminal" 
+
+# Targets RS485
+SUBSYSTEM=="tty", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", ATTRS{serial}=="A50285BI", SYMLINK+="ttyTargets"
+
+# Robot
+SUBSYSTEM=="tty", ATTRS{idVendor}=="067b", ATTRS{idProduct}=="23a3", ATTRS{serial}=="A;CKs11CN11", SYMLINK+="ttyRobot"
+
+# Side target steppies Ardunio Mega
+SUBSYSTEM=="tty", ATTRS{idVendor}=="2341", ATTRS{idProduct}=="0042", ATTRS{serial}=="75035303130351510271", SYMLINK+="ttySteppies"

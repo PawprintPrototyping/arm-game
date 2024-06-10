@@ -9,7 +9,7 @@ class ArmSerial(SerialBase):
     logger = structlog.get_logger()
     STARTUP_SCRIPT = b"""speed 100
     """
-    ROBOT_LOCATIONS = ["p1", "p2", "p3", "p4", "p5"]
+    ROBOT_LOCATIONS = ["p1", "p2", "p3", "p4", "p5", "tease1", "tease2"]
 
     IDLE = "idle"
     ACTIVE = "active"
@@ -67,7 +67,7 @@ class ArmSerial(SerialBase):
             self.state = ArmSerial.IDLE
             return
 
-        assert prompt.endswith(f"move {location}\r\n".encode('latin1'))
+        #assert prompt.endswith(f"move {location}\r\n".encode('latin1'))
         self.write(b"finish\n")
         prompt = b""
         while prompt != b"test> ":

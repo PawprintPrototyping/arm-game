@@ -146,6 +146,14 @@ class Scoreboard(RGBBase):
           "twitch.tv/itsabland",
           "Ligma",
           "*pew pew pew pew*",
+          "Balls",
+          "*meows*",
+          "404 message not found",
+          "Livin' like Larry",
+          "Sussy shorts",
+          "uwu",
+          "Do a barrel roll!",
+          "Dude, this is a lot of pressure"
         ]
         return random.choice(potential_messages)
         
