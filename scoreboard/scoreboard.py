@@ -37,6 +37,7 @@ class Scoreboard(RGBBase):
         super(Scoreboard, self).__init__(*args, **kwargs)
 
         self.state = Scoreboard.IDLE
+        self.message_data = {}
         self.minutes = kwargs.get("minutes", 1)
         self.seconds = kwargs.get("seconds", 0)
         self.stop = False
@@ -118,7 +119,10 @@ class Scoreboard(RGBBase):
         canvas = self.matrix.CreateFrameCanvas()
         canvas.Clear()
         canvas.Fill(255, 0, 0)
-        graphics.DrawText(canvas, self.big_font, 12, 25, self.black, "GAME OVER")
+        message = self.message_data.get("text", "GAME OVER")
+        x = self.message_data.get("x", 12)
+        y = self.message_data.get("y", 25)
+        graphics.DrawText(canvas, self.big_font, x, y, self.black, message)
         self.matrix.SwapOnVSync(canvas)
         mqtt.single(f"/scoreboard/timer/game_over", "GAME OVER", hostname=MQTT_HOSTNAME)
 
@@ -137,7 +141,10 @@ class Scoreboard(RGBBase):
           "Bang!",
           "You got me!",
           "*dabs*",
-          "Now you're thinking with\nlasers!",
+          "Now you're lasering!",
+          "Bite my shiny robot ass",
+          "twitch.tv/itsabland",
+          "Ligma",
           "*pew pew pew pew*",
         ]
         return random.choice(potential_messages)

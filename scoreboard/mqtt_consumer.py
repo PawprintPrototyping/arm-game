@@ -38,6 +38,7 @@ def on_message(client, rgbmatrix, msg):
         data = json.loads(msg.payload.decode("utf8"))
     except json.JSONDecodeError:
         log.warn("Payload is not valid JSON", mqtt_msg=msg)
+    rgbmatrix.message_data = data
 
     match msg.topic:
         case "/scoreboard/rgb/clear":
