@@ -14,7 +14,7 @@ from target_scoring_serial import TargetScoringSerial
 
 MQTT_HOST = os.getenv("MQTT_HOST", "localhost")
 DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "t")
-DEVICE = os.getenv("DEVICE", "/dev/ttyUSB1")
+DEVICE = os.getenv("DEVICE", "/dev/ttyTargets")
 BAUDRATE = int(os.getenv("BAUDRATE", "9600"))
 DATABASE = os.getenv("DATABASE", "/home/pi/scores.db")
 BELL_PIN = 7

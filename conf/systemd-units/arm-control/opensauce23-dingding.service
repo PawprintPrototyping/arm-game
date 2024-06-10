@@ -1,0 +1,11 @@
+[Unit]
+Description=Opensauce23 Bell Ringing Service
+After=syslog.target network.target
+
+[Service]
+ExecStart=/home/pi/opensauce23/mqtt_dingding.sh
+Type=simple
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

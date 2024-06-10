@@ -9,7 +9,7 @@ from target_movement_serial import TargetMovementSerial
 
 MQTT_HOST = os.getenv("MQTT_HOST", "motion-display")
 DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "t")
-DEVICE = os.getenv("DEVICE", "/dev/ttyUSB2")
+DEVICE = os.getenv("DEVICE", "/dev/ttySteppies")
 BAUDRATE = int(os.getenv("BAUDRATE", "9600"))
 
 TOPIC_REGEX = re.compile(r"^/target_movement/(?P<command>.*)$")

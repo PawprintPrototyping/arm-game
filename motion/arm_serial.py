@@ -12,7 +12,9 @@ class ArmSerial(SerialBase):
     ROBOT_LOCATIONS = ["p1", "p2", "p3", "p4", "p5", "tease1", "tease2"]
 
     IDLE = "idle"
+    PARK = "park"
     ACTIVE = "active"
+    ESTOP = "estop"
 
     def __init__(self, *args, **kwargs):
         ArmSerial.logger.debug("Opening robot serial", args=args, kwargs=kwargs)
@@ -36,6 +38,10 @@ class ArmSerial(SerialBase):
             match self.state:
                 case ArmSerial.ACTIVE:
                     self.finish(self.get_random_location())
+                case ArmSerial.PARK:
+                    # Move to the final resting position and transition state to idle
+                    self.finish("p3")
+                    self.state = ArmSerial.IDLE
             time.sleep(0.05)
 
     def assert_ash_prompt(self):
@@ -54,17 +60,36 @@ class ArmSerial(SerialBase):
         # (commanded position matches current position)
         pass
 
+    def check_estop(self, message):
+        if b'Arm power is OFF\r\n' in message:
+            ArmSerial.logger.error("Unable to move, Arm power is OFF!")
+            ArmSerial.logger.info("Setting state to ESTOP")
+            self.state = ArmSerial.ESTOP
+            # At this point, these extra signal messages will mess up our prompt and command echo,
+            # so we'll need to clear the message buffer and assert an ash prompt again:
+            self.ser.reset_input_buffer()
+            while self.ser.in_waiting != 0:
+                self.readline()
+                time.sleep(0.5)
+
+            try:
+                self.assert_ash_prompt()
+            except AssertionError:
+                pass
+            return True, message
+        return False, message
+
+
     def move(self, location):
         if type(location) == list:
             for loc in location:
-                self.write(f"move {loc}\n".encode('latin1'))
-        self.write(f"move {location}\n".encode('latin1'))
+                self.check_estop(self.write(f"move {loc}\n".encode('latin1')))
+        self.check_estop(self.write(f"move {location}\n".encode('latin1')))
 
     def finish(self, location):
         prompt = self.write(f"move {location}\n".encode('latin1'))
-        if prompt == b'S: Arm power is OFF\r\n':
-            ArmSerial.logger.error("Unable to move, Arm power is OFF!")
-            self.state = ArmSerial.IDLE
+        state, message = self.check_estop(prompt)
+        if state:
             return
 
         #assert prompt.endswith(f"move {location}\r\n".encode('latin1'))
@@ -72,6 +97,9 @@ class ArmSerial(SerialBase):
         prompt = b""
         while prompt != b"test> ":
             prompt += self.ser.read()
+            estop, message = self.check_estop(prompt)
+            if estop:
+                break
         ArmSerial.logger.info("read()", prompt=prompt)
 
     def close(self):

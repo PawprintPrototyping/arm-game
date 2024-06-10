@@ -10,7 +10,7 @@ from arm_serial import ArmSerial
 
 MQTT_HOST = os.getenv("MQTT_HOST", "localhost")
 DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "t")
-DEVICE = os.getenv("DEVICE", "/dev/ttyUSB0")
+DEVICE = os.getenv("DEVICE", "/dev/ttyRobot")
 BAUDRATE = int(os.getenv("BAUDRATE", "38400"))
 
 
@@ -49,8 +49,12 @@ def on_message(client, robotserial, msg):
             log.debug("Set robot motion state to active")
             arm_serial.state = ArmSerial.ACTIVE
         case "/motion/motion/stop":
+            log.debug("Set robot motion state to park")
+            arm_serial.state = ArmSerial.PARK
+        case "/motion/motion/idle":
             log.debug("Set robot motion state to idle")
             arm_serial.state = ArmSerial.IDLE
+
 
 
 mqttc = mqtt.Client()
