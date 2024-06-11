@@ -1,5 +1,5 @@
 # Reload and trigger with:
-#   sudo udevadm control --reload-rules && sudo udevadm trigger
+UBSYSTEM=="tty", ATTRS{idVendor}=="XXXX", ATTRS{idProduct}=="YYYY", RUN+="/bin/stty -F /dev/%k -hupcl"
 # 
 # Test new devices by checking the output of:
 #   udevadm test -a add $(udevadm info -q path -n /dev/ttyACM0)
@@ -15,3 +15,6 @@ SUBSYSTEM=="tty", ATTRS{idVendor}=="067b", ATTRS{idProduct}=="23a3", ATTRS{seria
 
 # Side target steppies Ardunio Mega
 SUBSYSTEM=="tty", ATTRS{idVendor}=="2341", ATTRS{idProduct}=="0042", ATTRS{serial}=="75035303130351510271", SYMLINK+="ttySteppies"
+
+# Kay Display
+SUBSYSTEM=="tty", ATTRS{idVendor}=="1d6b", ATTRS{idProduct}=="0002", ATTRS{serial}=="0000:01:00.0", SYMLINK+="ttyKayDisplay", RUN+="/bin/stty -F /dev/%k -hupcl"
