@@ -1,20 +1,24 @@
 # Reload and trigger with:
-UBSYSTEM=="tty", ATTRS{idVendor}=="XXXX", ATTRS{idProduct}=="YYYY", RUN+="/bin/stty -F /dev/%k -hupcl"
+#   sudo udevadm control --reload-rules && sudo udevadm trigger
 # 
 # Test new devices by checking the output of:
 #   udevadm test -a add $(udevadm info -q path -n /dev/ttyACM0)
+#
+# Follow the incredibly verbose live action-packed expense account while plugging
+# things in using
+#   sudo udevadm monitor --environment
 
 # VT Terminal
-SUBSYSTEM=="tty", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", ATTRS{serial}=="A10MARDL", SYMLINK+="ttyTerminal" 
+SUBSYSTEM=="tty", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", ATTRS{serial}=="A10MARDL", SYMLINK:="ttyTerminal" 
 
 # Targets RS485
-SUBSYSTEM=="tty", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", ATTRS{serial}=="A50285BI", SYMLINK+="ttyTargets"
+SUBSYSTEM=="tty", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", ATTRS{serial}=="A50285BI", SYMLINK:="ttyTargets"
 
 # Robot
-SUBSYSTEM=="tty", ATTRS{idVendor}=="067b", ATTRS{idProduct}=="23a3", ATTRS{serial}=="A;CKs11CN11", SYMLINK+="ttyRobot"
+SUBSYSTEM=="tty", ATTRS{idVendor}=="067b", ATTRS{idProduct}=="23a3", ATTRS{serial}=="A;CKs11CN11", SYMLINK:="ttyRobot"
 
 # Side target steppies Ardunio Mega
-SUBSYSTEM=="tty", ATTRS{idVendor}=="2341", ATTRS{idProduct}=="0042", ATTRS{serial}=="75035303130351510271", SYMLINK+="ttySteppies"
+SUBSYSTEM=="tty", ATTRS{idVendor}=="2341", ATTRS{idProduct}=="0042", ATTRS{serial}=="75035303130351510271", SYMLINK:="ttySteppies"
 
 # Kay Display
-SUBSYSTEM=="tty", ATTRS{idVendor}=="1d6b", ATTRS{idProduct}=="0002", ATTRS{serial}=="0000:01:00.0", SYMLINK+="ttyKayDisplay", RUN+="/bin/stty -F /dev/%k -hupcl"
+SUBSYSTEM=="tty", ATTRS{idVendor}=="1a86", ATTRS{idProduct}=="7523", SYMLINK:="ttyKayDisplay", RUN+="/bin/stty -F /dev/%k -crtscts -hupcl -onlcr -opost 115200"

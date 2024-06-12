@@ -25,13 +25,28 @@ def send_kay_scores(high_scores, last_score):
     Kay Scoreboard:
     - 115200 8N1.
     - Expects 8 ASCII numbers followed by a single newline.
-    - Interprets 0xff as an off digit.
+    - Interprets 'X' as an off digit.
     - Scoreboard is currently broken up with first 4 digits as "HIGH SCORE" and last 4 as "YOUR SCORE"
     '''
-    bare_high_score = high_scores[0][2]
-    bare_last_score = last_score[0][2]
-    payload = (str(bare_high_score).rjust(4, ' ') + str(bare_last_score).rjust(4, ' ') + '\n').encode('latin1').replace(b' ', b'\\xff')
+    # Scores will be empty if the DB is brand new.
+    try:
+        bare_high_score = high_scores[0][2]
+    except IndexError:
+        bare_high_score = 0
+    try:
+        bare_last_score = last_score[0][2]
+    except IndexError:
+        bare_last_score = 0
+    #payload = (str(bare_high_score).rjust(4, ' ') + str(bare_last_score).rjust(4, ' ') + '\n').encode('latin1').replace(b' ', b'\\xff')
+    payload = (str(bare_high_score).rjust(4, ' ') + str(bare_last_score).rjust(4, ' ') + '\\n').encode('latin1').replace(b' ', b'X')
+    #ser = serial.Serial()
+    #ser.rts = False
+    #ser.dtr = False
+    #ser.baudrate = 115200
+    #ser.port = '/dev/ttyKayDisplay'
+    #ser.open()
     #ser.write(payload)
+    #pprint.pprint(payload)
     #ser.close()
     # OK - SO - There's a reason.
     # It's not a good reason.
