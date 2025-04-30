@@ -13,7 +13,7 @@ import paho.mqtt.client as mqtt
 from target_scoring_serial import TargetScoringSerial
 
 MQTT_HOST = os.getenv("MQTT_HOST", "localhost")
-DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "t")
+DEBUG = os.getenv("DEBUG", "False").lower() == "true"
 DEVICE = os.getenv("DEVICE", "/dev/ttyTargets")
 BAUDRATE = int(os.getenv("BAUDRATE", "9600"))
 DATABASE = os.getenv("DATABASE", "/home/pi/scores.db")
@@ -22,9 +22,9 @@ BELL_PIN = 7
 TOPIC_REGEX = re.compile(r"^/targets/(?P<id>\d)/(?P<command>.*)$")
 
 
-logging.basicConfig(level=logging.INFO)
+structlog.configure(wrapper_class=structlog.make_filtering_bound_logger(logging.INFO))
 if DEBUG:
-    logging.basicConfig(level=logging.DEBUG)
+    structlog.configure(wrapper_class=structlog.make_filtering_bound_logger(logging.DEBUG))
 log = structlog.getLogger(__name__)
 
 GPIO.setmode(GPIO.BOARD)

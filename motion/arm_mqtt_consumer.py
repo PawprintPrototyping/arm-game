@@ -11,7 +11,7 @@ from arm_serial import ArmSerial
 MQTT_HOST = os.getenv("MQTT_HOST", "localhost")
 DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "t")
 DEVICE = os.getenv("DEVICE", "/dev/ttyRobot")
-BAUDRATE = int(os.getenv("BAUDRATE", "38400"))
+BAUDRATE = int(os.getenv("BAUDRATE", "57600"))
 
 
 if DEBUG:

@@ -46,7 +46,8 @@ class TargetBlinkies(object):
 
                 # Select a random target to turn on
                 enable_targets = [random.choice(target_list),]
-                target_list.remove(enable_targets[0])
+                if len(enable_targets) > 1:
+                    target_list.remove(enable_targets[0])
 
                 # Optionally also enable a second target
                 if random.random() < CHANCE_DOUBLE_SCORE:

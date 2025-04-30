@@ -1,0 +1,11 @@
+[Unit]
+Description=Opensauce23 Cowbell Service
+After=syslog.target network.target
+
+[Service]
+ExecStart=/home/pi/opensauce23/mqtt_cowbell.sh
+Type=simple
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

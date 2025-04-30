@@ -4,6 +4,7 @@ import time
 
 from serial_base import SerialBase
 
+PROMPT_TEXT="opensauce"
 
 class ArmSerial(SerialBase):
     logger = structlog.get_logger()
@@ -40,7 +41,7 @@ class ArmSerial(SerialBase):
                     self.finish(self.get_random_location())
                 case ArmSerial.PARK:
                     # Move to the final resting position and transition state to idle
-                    self.finish("p3")
+                    self.finish("p1")
                     self.state = ArmSerial.IDLE
             time.sleep(0.05)
 
@@ -48,10 +49,10 @@ class ArmSerial(SerialBase):
         self.ser.write(b'\n')
         prompt = self.ser.readline()
         ArmSerial.logger.info("assert_ash_prompt readline()", prompt=prompt)
-        prompt += self.ser.read(6)
+        prompt += self.ser.read(len(PROMPT_TEXT)+2)
         ArmSerial.logger.info("assert_ash_prompt readline()", prompt=prompt)
-        if prompt != b"\r\ntest> ":
-            print(f"Not in an ash!  (got '{prompt}' but expected 'test> ')")
+        if prompt.decode('latin1') != f"\r\n{PROMPT_TEXT}> ":
+            print(f"Not in an ash!  (got '{prompt}' but expected '{PROMPT_TEXT}> ')")
             assert False
         assert True
 
@@ -95,7 +96,7 @@ class ArmSerial(SerialBase):
         #assert prompt.endswith(f"move {location}\r\n".encode('latin1'))
         self.write(b"finish\n")
         prompt = b""
-        while prompt != b"test> ":
+        while prompt.decode('latin1') != f"{PROMPT_TEXT}> ":
             prompt += self.ser.read()
             estop, message = self.check_estop(prompt)
             if estop:
