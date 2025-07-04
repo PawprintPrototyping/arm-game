@@ -1,4 +1,3 @@
-import logging
 import os
 import threading
 import time
@@ -54,15 +53,6 @@ class TargetBlinkies(object):
             self.publish_disable(target)
             self.publish_home(target)
 
-    @staticmethod
-    def random_subset(s):
-        out = set()
-        for el in s:
-            # random coin flip
-            if random.randint(0, 1) == 0:
-                out.add(el)
-        return out
-
     def run(self):
         while not self.stop:
             if self.enabled:
@@ -71,36 +61,33 @@ class TargetBlinkies(object):
                 off_time = random.random()
                 time.sleep(off_time)
 
-                # Select a random target to turn on
-                enable_targets = [random.choice(target_list),]
-                if len(enable_targets) > 1:
-                    target_list.remove(enable_targets[0])
+                # Select 2 Random Targets (avoid current limit of more than 2)
+                show_targets = random.sample(target_list, 2)
+                for t in show_targets:
+                    self.publish_up(t)
 
-                # Optionally also enable a second target
+                # Only enable one target most of the time, but sometimes enable both!
                 if random.random() < CHANCE_DOUBLE_SCORE:
-                    enable_targets.append(random.choice(target_list))
+                    enable_targets = show_targets
+                else:
+                    # Select a random target to turn on
+                    enable_targets = [random.choice(show_targets), ]
 
                 for t in enable_targets:
                     self.publish_enable(t)
-
-                # Select random targets to show
-                show_targets = self.random_subset(target_list)
-                for t in show_targets:
-                    self.publish_up(t)
 
                 # Dwell for a time
                 on_time = random.uniform(0.5, 1.5)
                 time.sleep(on_time)
 
-                # Select random shown targets to hide
-                show_targets = self.random_subset(show_targets)
-                for t in show_targets:
-                    self.publish_down(t)
-
                 # Turn off the target(s)
                 for t in enable_targets:
                     self.publish_disable(t)
                     time.sleep(random.uniform(0.1, 0.4))
+
+                # Hide the targets
+                for t in show_targets:
+                    self.publish_down(t)
 
             else:
                 time.sleep(0.1)

@@ -188,7 +188,7 @@ void cmdHome() {
 }
 void cmdHide() {
   stepperState->setPosition(StepperState::Position::HOME);
-  String respStr = String(id) + " hide start";
+  String respStr = String(id) + " down start";
   enableMax485Driver();
   Serial.println(respStr);
   disableMax485Driver();
@@ -196,7 +196,7 @@ void cmdHide() {
 
 void cmdShow() {
   stepperState->setPosition(StepperState::Position::UP);
-  String respStr = String(id) + " show start";
+  String respStr = String(id) + " up start";
   enableMax485Driver();
   Serial.println(respStr);
   disableMax485Driver();

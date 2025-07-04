@@ -27,7 +27,7 @@ void StepperState::findHome() {
 };
 
 boolean StepperState::setPosition(Position newPos) {
-    if (position == UNKNOWN) return false;
+    if ((position == UNKNOWN) || isMoving()) return false;
     stepper->setRPM(OPERATIONAL_RPM);
     switch (newPos)
     {
