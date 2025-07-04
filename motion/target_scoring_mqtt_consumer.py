@@ -54,6 +54,9 @@ Subscribes to:
 /targets/{id}/enable
 /targets/{id}/disable
 /targets/{id}/clear
+/targets/{id}/home
+/targets/{id}/up
+/targets/{id}/down
 
 Publishes to:
 /targets/{id}/hit
@@ -126,7 +129,15 @@ def on_message(client, targetserial, msg):
         case "clear":
             log.debug(f"Set target {match['id']} to clear")
             targetserial.enqueue(TargetScoringSerial.COMMAND_CLEAR, match['id'])
-
+        case "home":
+            log.debug(f"Set target {match['id']} to home")
+            targetserial.enqueue(TargetScoringSerial.COMMAND_HOME, match['id'])
+        case "up":
+            log.debug(f"Set target {match['id']} to up")
+            targetserial.enqueue(TargetScoringSerial.COMMAND_UP, match['id'])
+        case "down":
+            log.debug(f"Set target {match['id']} to down")
+            targetserial.enqueue(TargetScoringSerial.COMMAND_DOWN, match['id'])
 
 mqttc = mqtt.Client()
 mqttc.enable_logger(log)

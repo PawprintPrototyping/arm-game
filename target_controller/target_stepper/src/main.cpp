@@ -252,9 +252,9 @@ void setup() {
   //Serial.println(clearCmdStr);
   homeCmdStr = "home ";
   homeCmdStr += id;
-  hideCmdStr += "hide ";
+  hideCmdStr += "down ";
   hideCmdStr += id;
-  showCmdStr += "show ";
+  showCmdStr += "up ";
   showCmdStr += id;
   
   Timer1.initialize(bitDuration);
@@ -292,9 +292,9 @@ void loop() {
     cmdHide();
   } else if(inputString == showCmdStr) {
     cmdShow();
-  }else {
-    Serial.print("Fucko boingo: ");
-    Serial.println(inputString);
-  }
+  }// else {
+  //  Serial.print("Fucko boingo: ");
+  //  Serial.println(inputString);
+  //}
   inputString = "";
 }

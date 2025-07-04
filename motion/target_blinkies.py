@@ -31,10 +31,37 @@ class TargetBlinkies(object):
             logger.info("Disable target", target_id=target_id, action="disable")
             mqtt.single(f"/targets/{target_id}/disable", f"disable {target_id}", hostname=self.mqtt_host)
 
+    def publish_up(self, target_id):
+        logger.info("Move target up", target_id=target_id, action="up")
+        mqtt.single(f"/targets/{target_id}/up", f"up {target_id}", hostname=self.mqtt_host)
+
+    def publish_down(self, target_id):
+        logger.info("Move target down", target_id=target_id, action="down")
+        mqtt.single(f"/targets/{target_id}/down", f"down {target_id}", hostname=self.mqtt_host)
+
+    def publish_home(self, target_id):
+        logger.info("Home target", target_id=target_id, action="home")
+        mqtt.single(f"/targets/{target_id}/home", f"home {target_id}", hostname=self.mqtt_host)
+
+    def game_start(self):
+        logger.info("Home all targets")
+        for target in TargetScoringSerial.TARGET_IDS:
+            self.publish_home(target)
+
     def game_over(self):
         logger.info("Disable all targets")
         for target in TargetScoringSerial.TARGET_IDS:
             self.publish_disable(target)
+            self.publish_home(target)
+
+    @staticmethod
+    def random_subset(s):
+        out = set()
+        for el in s:
+            # random coin flip
+            if random.randint(0, 1) == 0:
+                out.add(el)
+        return out
 
     def run(self):
         while not self.stop:
@@ -56,9 +83,19 @@ class TargetBlinkies(object):
                 for t in enable_targets:
                     self.publish_enable(t)
 
+                # Select random targets to show
+                show_targets = self.random_subset(target_list)
+                for t in show_targets:
+                    self.publish_up(t)
+
                 # Dwell for a time
                 on_time = random.uniform(0.5, 1.5)
                 time.sleep(on_time)
+
+                # Select random shown targets to hide
+                show_targets = self.random_subset(show_targets)
+                for t in show_targets:
+                    self.publish_down(t)
 
                 # Turn off the target(s)
                 for t in enable_targets:

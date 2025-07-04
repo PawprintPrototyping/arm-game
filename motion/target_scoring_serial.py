@@ -19,6 +19,9 @@ class TargetScoringSerial(SerialBase):
     COMMAND_ENABLE = "enable {index}\n"
     COMMAND_DISABLE = "disable {index}\n"
     COMMAND_POLL = "poll {index}\n"
+    COMMAND_HOME = "home {index}\n"
+    COMMAND_UP = "up {index}\n"
+    COMMAND_DOWN = "down {index}\n"
     STATE_HIT = b"1"
     STATE_UNHIT = b"0"
 
@@ -50,6 +53,12 @@ class TargetScoringSerial(SerialBase):
                     self.disable(cmd["target_id"])
                 case TargetScoringSerial.COMMAND_CLEAR:
                     self.clear(cmd["target_id"])
+                case TargetScoringSerial.COMMAND_HOME:
+                    self.home(cmd["target_id"])
+                case TargetScoringSerial.COMMAND_UP:
+                    self.up(cmd["target_id"])
+                case TargetScoringSerial.COMMAND_DOWN:
+                    self.down(cmd["target_id"])
             time.sleep(0.02)
 
             for idx in TargetScoringSerial.TARGET_IDS:
@@ -78,18 +87,19 @@ class TargetScoringSerial(SerialBase):
         line = self.ser.read(12)
         TargetScoringSerial.logger.debug("read(12)", line=line)
         try:
-            idx, cmd, state, hit = line.split()
+            idx, cmd, state, hit, pos = line.split()
         except ValueError:
             logger.warn("Unable to unpack values")
             return False
 
-        logger.debug("Target poll", index=index, hit=hit, state=state)
+        logger.debug("Target poll", index=index, hit=hit, state=state, pos=pos)
         if index != int(idx):
             return None
         if hit == TargetScoringSerial.STATE_HIT:
             return True
         if hit == TargetScoringSerial.STATE_UNHIT:
             return False
+        return None
 
     def enable(self, index):
         return self.write(TargetScoringSerial.COMMAND_ENABLE.format(index=index).encode("latin1"))
@@ -99,6 +109,15 @@ class TargetScoringSerial(SerialBase):
 
     def clear(self, index):
         return self.write(TargetScoringSerial.COMMAND_CLEAR.format(index=index).encode("latin1"))
+
+    def home(self, index):
+        return self.write(TargetScoringSerial.COMMAND_HOME.format(index=index).encode("latin1"))
+
+    def up(self, index):
+        return self.write(TargetScoringSerial.COMMAND_UP.format(index=index).encode("latin1"))
+
+    def down(self, index):
+        return self.write(TargetScoringSerial.COMMAND_DOWN.format(index=index).encode("latin1"))
 
     def poll_and_clear(self, index):
         state = self.poll(index)
