@@ -6,7 +6,7 @@ StepperState::StepperState(int pwmPin, int dirPin, int limitSwitchPin) {
     stepper = new A4988(MOTOR_STEPS, dirPin, pwmPin, MS1, MS2, MS3);
     stepper->begin(OPERATIONAL_RPM, MICROSTEPS);
     limitSwitch = new ezButton(limitSwitchPin);
-    limitSwitch->setDebounceTime(50); // ms
+    limitSwitch->setDebounceTime(5); // ms
 }
 
 void StepperState::move() {
@@ -14,7 +14,7 @@ void StepperState::move() {
     if (limitSwitch->isPressed()) {
         stepper->stop();
         // Move up a few steps for HOME point.
-        stepper->startRotate(-1);
+        stepper->startRotate(5);
         position = HOME;
     }
     isRotating = (stepper->nextAction() > 0);
@@ -27,12 +27,13 @@ void StepperState::findHome() {
 };
 
 boolean StepperState::setPosition(Position newPos) {
-    if ((position == UNKNOWN) || isMoving()) return false;
+    if ((position == UNKNOWN) || (position == newPos) || isMoving()) return false;
     stepper->setRPM(OPERATIONAL_RPM);
     switch (newPos)
     {
     case HOME:
-        stepper->startRotate(-90);
+        // Add a few extra degrees here to account for missed steps when moving fast.
+        stepper->startRotate(-95);
         position = HOME;
         break;
     case UP:

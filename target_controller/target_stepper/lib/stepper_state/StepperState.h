@@ -4,10 +4,9 @@
 #include <A4988.h>
 #include <ezButton.h>
 
-// using a 200-step motor
-#define MOTOR_STEPS 200
+#define MOTOR_STEPS 400
 // RPM to use when operating normally using setPosition
-#define OPERATIONAL_RPM 240
+#define OPERATIONAL_RPM 200
 // RPM to use when homing, we may not want to SLAM into the limit switch.
 #define HOMING_RPM 60
 // This needs to match the microstep configuration set on the A4988.
@@ -50,8 +49,8 @@ class StepperState {
 
         /// @brief  Sets the goal position of the stepper motor.
         /// @param position 
-        /// @return true if the new goal position was set or false if either the position is UNKNOWN and a position can not be set (call findHome() first)
-        ///         or there is already a setPosition in progress (check with isMoving())
+        /// @return true if the new goal position was set or false if the position is UNKNOWN and a position can not be set (call findHome() first),
+        ///         there is already a setPosition in progress (check with isMoving()), or the target is already in the position.
         boolean setPosition(Position position);
 
         /// @brief Is the stepper currently moving towards a set goal position
