@@ -33,6 +33,7 @@ boolean StepperState::setPosition(Position newPos) {
     {
     case HOME:
         // Add a few extra degrees here to account for missed steps when moving fast.
+        // It will probably hit the limit switch every time it homes, but it will simply reposition.
         stepper->startRotate(-95);
         position = HOME;
         break;

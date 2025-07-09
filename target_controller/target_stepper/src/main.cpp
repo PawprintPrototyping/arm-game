@@ -262,13 +262,24 @@ void setup() {
 
   //digitalWrite(max485DriverEnablePin, HIGH);
   
-  enableMax485Driver();
-  Serial.println(String(id) + " henlo");
-  disableMax485Driver();
+  //enableMax485Driver();
+  //Serial.println(String(id) + " henlo");
+  //disableMax485Driver();
 }
 
 void loop() {
+  bool wasMoving = stepperState->isMoving();
   stepperState->move();
+  bool isMoving = stepperState->isMoving();
+  // Do not allow timer interrupts when we are moving to keep the 
+  if (!wasMoving && isMoving) {
+    Timer1.detachInterrupt();
+  }
+  if (wasMoving && !isMoving) {
+    Timer1.attachInterrupt(timerHandler);
+  }
+  // If we are moving, do not spend clock cycles on parsing Serial, wait until idle
+  if (isMoving) return ;
   if (!Serial.available()) return;
   int c;
   while ((c = Serial.read()) > 0) {
