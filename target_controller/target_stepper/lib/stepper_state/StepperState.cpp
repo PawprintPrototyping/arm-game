@@ -4,6 +4,9 @@
 StepperState::StepperState(int pwmPin, int dirPin, int limitSwitchPin) {
     // https://github.com/laurb9/StepperDriver/tree/master
     stepper = new A4988(MOTOR_STEPS, dirPin, pwmPin, MS1, MS2, MS3);
+    // accel and decel values. I have no idea what the numbers mean, but they work!
+    // comment out to remove acceleration and deceleration 
+    stepper->setSpeedProfile(BasicStepperDriver::Mode::LINEAR_SPEED, 2000, 2000);
     stepper->begin(OPERATIONAL_RPM, MICROSTEPS);
     limitSwitch = new ezButton(limitSwitchPin);
     limitSwitch->setDebounceTime(5); // ms

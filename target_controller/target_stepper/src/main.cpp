@@ -25,18 +25,18 @@ Regarding the MAX485 transceiver, we need to enable the driver for the duration 
 Since we can't easily tell when the serial transmission is finished (AFAICT), we'll just use a set max485DriverEnableDuration and cross our fingers.
 */
 
-const int stepperLimitPin = 8;
-const int hitIndicatorPin = 7;
-const int enableIndicatorPin = 6;
-const int stepperPwmPin = 5;
-const int stepperDirPin = 4;
+const int stepperLimitPin = A1;
+const int hitIndicatorPin = 5;
+const int enableIndicatorPin = 4;
+const int stepperPwmPin = 6;
+const int stepperDirPin = 7;
 const int max485DriverEnablePin = 2;
 const int max485ReceiverEnablePin = 3;
-const int idPin0 = 9;
-const int idPin1 = 10;
-const int idPin2 = 11;
-const int idPin3 = 12;
-const int irDataPin = A5;
+const int idPin0 = 8;
+const int idPin1 = 9;
+const int idPin2 = 10;
+const int idPin3 = MOSI;
+const int irDataPin = A0;
 const int bitDuration = 500; // microseconds.
 const int iframeDuration = 1000; // milliseconds.
 const int max485DriverEnableDuration = 20; // milliseconds. Increase if decreasing baudrate.
@@ -279,7 +279,7 @@ void loop() {
     Timer1.attachInterrupt(timerHandler);
   }
   // If we are moving, do not spend clock cycles on parsing Serial, wait until idle
-  if (isMoving) return ;
+  if (isMoving) return;
   if (!Serial.available()) return;
   int c;
   while ((c = Serial.read()) > 0) {

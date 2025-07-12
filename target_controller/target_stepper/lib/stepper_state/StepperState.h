@@ -4,7 +4,7 @@
 #include <A4988.h>
 #include <ezButton.h>
 
-#define MOTOR_STEPS 400
+#define MOTOR_STEPS 200
 // RPM to use when operating normally using setPosition
 #define OPERATIONAL_RPM 200
 // RPM to use when homing, we may not want to SLAM into the limit switch.
