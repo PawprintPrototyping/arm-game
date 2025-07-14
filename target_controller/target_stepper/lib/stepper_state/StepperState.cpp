@@ -17,7 +17,7 @@ void StepperState::move() {
     if (limitSwitch->isPressed()) {
         stepper->stop();
         // Move up a few steps for HOME point.
-        stepper->startRotate(5);
+        stepper->startRotate(HOME_START_OFFSET);
         position = HOME;
     }
     isRotating = (stepper->nextAction() > 0);
@@ -26,7 +26,7 @@ void StepperState::move() {
 void StepperState::findHome() {
     stepper->setRPM(HOMING_RPM);
     // move backwards a full rotation
-    stepper->startRotate(-360);
+    stepper->startRotate(ROTATE_TOWARD_LIMIT);
 };
 
 boolean StepperState::setPosition(Position newPos) {
@@ -37,11 +37,11 @@ boolean StepperState::setPosition(Position newPos) {
     case HOME:
         // Add a few extra degrees here to account for missed steps when moving fast.
         // It will probably hit the limit switch every time it homes, but it will simply reposition.
-        stepper->startRotate(-95);
+        stepper->startRotate(UP_TO_DOWN_ROTATION);
         position = HOME;
         break;
     case UP:
-        stepper->startRotate(90);
+        stepper->startRotate(DOWN_TO_UP_ROTATION);
         position = UP;
     default:
         break;

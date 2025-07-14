@@ -11,6 +11,33 @@
 #define HOMING_RPM 60
 // This needs to match the microstep configuration set on the A4988.
 #define MICROSTEPS 16
+
+// Sometimes hardware issues happen. Instead of taking the time to fix it properly, lets just fix it here!
+// Flipping this will reverse motors.
+#define FLIP_DIR true
+// Next, use #if to check the value of FLIP_DIR
+#if FLIP_DIR
+  #define HOME_START_OFFSET -5
+#else
+  #define HOME_START_OFFSET 5
+#endif
+#if FLIP_DIR
+  #define DOWN_TO_UP_ROTATION -85
+#else
+  #define DOWN_TO_UP_ROTATION 85
+#endif
+// For UP to DOWN rotation, overshoot 5 degrees so it resets via the limit switch in case it missed any steps.
+#if FLIP_DIR
+  #define UP_TO_DOWN_ROTATION 95
+#else
+  #define UP_TO_DOWN_ROTATION -95
+#endif
+#if FLIP_DIR
+  #define ROTATE_TOWARD_LIMIT 360
+#else
+  #define ROTATE_TOWARD_LIMIT -360
+#endif
+
 // configure the microstep pins as unconnected
 #define MS1 PIN_UNCONNECTED
 #define MS2 PIN_UNCONNECTED

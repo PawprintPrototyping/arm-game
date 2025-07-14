@@ -25,7 +25,7 @@ Regarding the MAX485 transceiver, we need to enable the driver for the duration 
 Since we can't easily tell when the serial transmission is finished (AFAICT), we'll just use a set max485DriverEnableDuration and cross our fingers.
 */
 
-const int stepperLimitPin = A1;
+const int stepperLimitPin = A2;
 const int hitIndicatorPin = 5;
 const int enableIndicatorPin = 4;
 const int stepperPwmPin = 6;
@@ -114,9 +114,9 @@ void timerHandler() {
       digitalWrite(hitIndicatorPin, HIGH);
       hit = 1;
       hitStat = true;
+      stepperState->setPosition(StepperState::Position::HOME);
     }
   }
-  //Serial.println(receiveBuffer.last());
 }
 
 // Expected usage: "poll <int id>"
@@ -259,12 +259,10 @@ void setup() {
   
   Timer1.initialize(bitDuration);
   Timer1.attachInterrupt(timerHandler);
-
-  //digitalWrite(max485DriverEnablePin, HIGH);
   
   //enableMax485Driver();
   //Serial.println(String(id) + " henlo");
-  //disableMax485Driver();
+  disableMax485Driver(); // set to receive
 }
 
 void loop() {
