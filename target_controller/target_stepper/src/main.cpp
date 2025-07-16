@@ -225,7 +225,7 @@ void setup() {
   // Otherweise, we want the receiver to be on unless we're transmitting.
   digitalWrite(max485ReceiverEnablePin, LOW);
 
-  Serial.begin(9600);
+  Serial.begin(14400);
   while (!Serial);
 
   // The ID selection pins are INPUT_PULLUP, so they're HIGH (00000001) when off and LOW (00000000) when on.
@@ -269,7 +269,7 @@ void loop() {
   bool wasMoving = stepperState->isMoving();
   stepperState->move();
   bool isMoving = stepperState->isMoving();
-  // Do not allow timer interrupts when we are moving to keep the 
+  // Do not allow timer interrupts when we are moving to keep the stepper consistent.
   if (!wasMoving && isMoving) {
     Timer1.detachInterrupt();
   }
@@ -277,15 +277,15 @@ void loop() {
     Timer1.attachInterrupt(timerHandler);
   }
   // If we are moving, do not spend clock cycles on parsing Serial, wait until idle
-  if (isMoving) return;
+  // if (isMoving) return;
   if (!Serial.available()) return;
-  int c;
-  while ((c = Serial.read()) > 0) {
-    if (c != '\n') {
+  int c = Serial.read();
+  //while ((c = Serial.read()) > 0) {
+    if (c != '\n' && c > 0) {
       inputString += (char) c;
       return;
     }
-  }
+  //}
   inputString.trim();
   if (inputString == pollCmdStr) {
     cmdPoll();
