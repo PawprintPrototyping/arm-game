@@ -63,18 +63,16 @@ class TargetBlinkies(object):
                 time.sleep(off_time)
 
 
-                # Select 2 Random Targets (avoid current limit of more than 2)
-                show_targets = random.sample(target_list, 2)
+                # Select 2 to 4 Random Targets
+                targets_to_show_count = random.randint(2,4)
+                show_targets = random.sample(target_list, targets_to_show_count)
                 for t in show_targets:
                     self.publish_up(t)
                     time.sleep(off_time)
 
-                # Only enable one target most of the time, but sometimes enable both!
-                if random.random() < CHANCE_DOUBLE_SCORE:
-                    enable_targets = show_targets
-                else:
-                    # Select a random target to turn on
-                    enable_targets = [random.choice(show_targets), ]
+                # Enable subset of chosen targets
+                targets_to_enable_count = random.randint(2, targets_to_show_count)
+                enable_targets = random.sample(show_targets, targets_to_enable_count)
 
                 for t in enable_targets:
                     self.publish_enable(t)
