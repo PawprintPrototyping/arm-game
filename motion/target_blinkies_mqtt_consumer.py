@@ -44,7 +44,7 @@ def on_message(client, blinkies, msg):
     log.debug("on_message", topic=msg.topic, payload=msg.payload)
 
     if msg.topic == "/scoreboard/rgb/start_timer":
-        blinkies.game_start()
+        #blinkies.game_start()
         blinkies.enabled = True
 
     if msg.topic == "/scoreboard/timer/game_over":

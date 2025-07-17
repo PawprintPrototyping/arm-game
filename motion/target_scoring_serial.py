@@ -14,7 +14,8 @@ logger = structlog.get_logger()
 
 class TargetScoringSerial(SerialBase):
     #TARGET_IDS = [1, 2, 3]
-    TARGET_IDS = [1, 2, 3, 4, 6, 7]
+    TARGET_IDS = [1, 2, 4, 6, 7]
+    TARGET_ERROR_COUNTS = dict.fromkeys(TARGET_IDS, 0)
     COMMAND_CLEAR = "clear {index}\n"
     COMMAND_ENABLE = "enable {index}\n"
     COMMAND_DISABLE = "disable {index}\n"
@@ -34,6 +35,9 @@ class TargetScoringSerial(SerialBase):
         self.player_info = {"name": "NO NAME"}
 
     def enqueue(self, command, target_id):
+        if int(target_id) not in self.TARGET_IDS:
+            logger.warn(f"Target ID {target_id} not found")
+            return
         try:
             self.command_queue.put_nowait({"command": command, "target_id": target_id})
         except queue.Full:
@@ -92,8 +96,11 @@ class TargetScoringSerial(SerialBase):
             idx, cmd, state, hit, pos = line.split()
         except ValueError:
             logger.warn(f"Unable to unpack values ('{line}')")
+            self.TARGET_ERROR_COUNTS[index] += 1
+            mqtt.single(f"/target/{index}/errors", json.dumps({"target": index, "error_count": self.TARGET_ERROR_COUNTS[index]}), hostname=MQTT_HOST)
             return False
 
+        #mqtt.single(f"/target/{index}/healthy", json.dumps({"target": index, "response": str(line)}), hostname=MQTT_HOST)
         logger.debug("Target poll", index=index, hit=hit, state=state, pos=pos)
         if index != int(idx):
             return None

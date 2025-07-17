@@ -12,8 +12,8 @@ function ctrl_c {
 }
 
 function disable_targets {
-  for i in seq 1 8; do
-    mosquitto_pub -h arm-display -t "/targets/$i/disable" -m ''
+  for i in `seq 1 8`; do
+    mosquitto_pub -h arm-display -t "/target/$i/disable" -m ''
     sleep 0.2
   done
 }
@@ -23,6 +23,7 @@ trap ctrl_c INT
 while true; do
   for i in seq 1 30; do
     clear
+    disable_targets
     python highscores.py
 
     echo ""
@@ -68,12 +69,12 @@ while true; do
     sleep 1
 
   done
-  clear
-  echo "Please wait, recalibrating...."
-  echo -e '\n\n\n'
-  figlet 'Please  wait'
-  systemctl  --user restart opensauce23-target-movement.service
-  sleep 30
+#  clear
+#  echo "Please wait, recalibrating...."
+#  echo -e '\n\n\n'
+#  figlet 'Please  wait'
+#  systemctl  --user restart opensauce23-target-movement.service
+#  sleep 30
 
   # Old recal code
   #for i in seq 1 30; do

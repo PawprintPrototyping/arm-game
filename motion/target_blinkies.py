@@ -9,6 +9,7 @@ from paho.mqtt import publish as mqtt
 from target_scoring_serial import TargetScoringSerial
 
 CHANCE_DOUBLE_SCORE = 0.2
+MINIMUM_SLEEP_TIME = 0.1
 
 logger = structlog.get_logger()
 MQTT_HOST = os.getenv("MQTT_HOST", "localhost")
@@ -58,7 +59,7 @@ class TargetBlinkies(object):
             if self.enabled:
                 target_list = list(TargetScoringSerial.TARGET_IDS)
                 # Sleep some random amount of time
-                off_time = random.random()
+                off_time = random.random() + MINIMUM_SLEEP_TIME
                 time.sleep(off_time)
 
 
@@ -66,6 +67,7 @@ class TargetBlinkies(object):
                 show_targets = random.sample(target_list, 2)
                 for t in show_targets:
                     self.publish_up(t)
+                    time.sleep(off_time)
 
                 # Only enable one target most of the time, but sometimes enable both!
                 if random.random() < CHANCE_DOUBLE_SCORE:
@@ -91,7 +93,7 @@ class TargetBlinkies(object):
                     self.publish_down(t)
 
             else:
-                time.sleep(0.1)
+                time.sleep(MINIMUM_SLEEP_TIME)
 
 
 if __name__ == "__main__":

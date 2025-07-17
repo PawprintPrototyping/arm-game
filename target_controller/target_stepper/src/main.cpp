@@ -39,6 +39,8 @@ const int idPin3 = MOSI;
 const int irDataPin = A0;
 const int bitDuration = 500; // microseconds.
 const int iframeDuration = 1000; // milliseconds.
+
+/* amount of time assumed for a message to to go out of the serial TX buffer.  See Weasel comment above on line 33. */
 const int max485DriverEnableDuration = 20; // milliseconds. Increase if decreasing baudrate.
 const bool blasterPattern[56] = {
   0,0,0,0,
