@@ -119,6 +119,8 @@ def on_message(client, targetserial, msg):
 
     match = TOPIC_REGEX.match(msg.topic)
 
+    if not match:
+        log.warn("Skip regex match")
     match match['command']:
         case "enable":
             log.debug(f"Set target {match['id']} to enabled")

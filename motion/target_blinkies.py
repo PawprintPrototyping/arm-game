@@ -61,6 +61,7 @@ class TargetBlinkies(object):
                 off_time = random.random()
                 time.sleep(off_time)
 
+
                 # Select 2 Random Targets (avoid current limit of more than 2)
                 show_targets = random.sample(target_list, 2)
                 for t in show_targets:
