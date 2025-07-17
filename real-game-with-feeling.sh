@@ -7,12 +7,15 @@ function ctrl_c {
   mosquitto_pub -h arm-display -t /motion/motion/stop -m ''
   mosquitto_pub -h arm-display -t /target_movement/stop -m ''
   sleep 1
-  mosquitto_pub -h arm-display -t /targets/3/disable -m ''
-  sleep 1
-  mosquitto_pub -h arm-display -t /targets/2/disable -m ''
-  sleep 1
-  mosquitto_pub -h arm-display -t /targets/1/disable -m ''
+  disable_targets
   exit
+}
+
+function disable_targets {
+  for i in seq 1 8; do
+    mosquitto_pub -h arm-display -t "/targets/$i/disable" -m ''
+    sleep 0.2
+  done
 }
 
 trap ctrl_c INT
@@ -60,11 +63,7 @@ while true; do
     mosquitto_pub -h arm-display -t /target_movement/stop -m ''
 
     sleep 1
-    mosquitto_pub -h arm-display -t /targets/3/disable -m ''
-    sleep 1
-    mosquitto_pub -h arm-display -t /targets/2/disable -m ''
-    sleep 1
-    mosquitto_pub -h arm-display -t /targets/1/disable -m ''
+    disable_targets
     #mosquitto_pub -h arm-display -t /scoreboard/rgb/clear -m ""
     sleep 1
 

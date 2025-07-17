@@ -14,7 +14,7 @@ logger = structlog.get_logger()
 
 class TargetScoringSerial(SerialBase):
     #TARGET_IDS = [1, 2, 3]
-    TARGET_IDS = [2,]
+    TARGET_IDS = [1, 2, 3, 4, 6, 7]
     COMMAND_CLEAR = "clear {index}\n"
     COMMAND_ENABLE = "enable {index}\n"
     COMMAND_DISABLE = "disable {index}\n"
@@ -59,6 +59,8 @@ class TargetScoringSerial(SerialBase):
                     self.up(cmd["target_id"])
                 case TargetScoringSerial.COMMAND_DOWN:
                     self.down(cmd["target_id"])
+            # Load bearing sleep: if we tell the microcontroller to do too many things back to back, we think it will
+            # drop subsequent messages.  See also: `max485DriverEnableDuration` in target_controller/target_stepper/src/main.cpp
             time.sleep(0.02)
 
             for idx in TargetScoringSerial.TARGET_IDS:
@@ -68,7 +70,7 @@ class TargetScoringSerial(SerialBase):
                 if state:
                     self.publish_hit(idx)
                     self.clear(idx)
-                time.sleep(0.06)
+                time.sleep(0.03)
 
     def publish_hit(self, index):
         TargetScoringSerial.logger.info("Publish hit for target", target=index)
@@ -84,12 +86,12 @@ class TargetScoringSerial(SerialBase):
         TargetScoringSerial.logger.debug("Writing poll command", index=index)
         self.ser.write(f"poll {index}\n".encode("latin1"))
         TargetScoringSerial.logger.debug("Reading response")
-        line = self.ser.read(12)
-        TargetScoringSerial.logger.debug("read(12)", line=line)
+        line = self.ser.read(14)
+        TargetScoringSerial.logger.debug("read(14)", line=line)
         try:
             idx, cmd, state, hit, pos = line.split()
         except ValueError:
-            logger.warn("Unable to unpack values")
+            logger.warn(f"Unable to unpack values ('{line}')")
             return False
 
         logger.debug("Target poll", index=index, hit=hit, state=state, pos=pos)
