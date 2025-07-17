@@ -66,6 +66,7 @@ unsigned int id = 0;
 volatile int enabled = 0;
 volatile int hit = 0;
 volatile bool hitStat = false;
+volatile long lastTransmitTimeMillis = -1;
 
 String inputString;
 
@@ -77,18 +78,20 @@ String homeCmdStr;
 String hideCmdStr;
 String showCmdStr;
 
+void setMax485Timestamp() {
+  lastTransmitTimeMillis = millis();
+}
+
 void enableMax485Driver() {
   digitalWrite(max485DriverEnablePin, HIGH);
   digitalWrite(max485ReceiverEnablePin, HIGH); // Disable receiver when transmitting.
+  setMax485Timestamp();
 }
 
 void disableMax485Driver() {
-  delay(max485DriverEnableDuration);
   digitalWrite(max485DriverEnablePin, LOW);
   digitalWrite(max485ReceiverEnablePin, LOW); // We're done transmitting, reenable the receiver.
 }
-
-
 
 bool checkHit() {
   // Don't try to compare until we have a full buffer to work with.
@@ -152,7 +155,6 @@ void cmdPoll() {
   String respStr = String(id) + " poll " + enabledMsg + " " + hitMsg + " " + positionMsg;
   enableMax485Driver();
   Serial.println(respStr);
-  disableMax485Driver();
 }
 
 void cmdClear() {
@@ -160,7 +162,6 @@ void cmdClear() {
   String respStr = String(id) + " clear ok";
   enableMax485Driver();
   Serial.println(respStr);
-  disableMax485Driver();
 }
 
 void cmdEnable() {
@@ -169,7 +170,6 @@ void cmdEnable() {
   String respStr = String(id) + " enable ok";
   enableMax485Driver();
   Serial.println(respStr);
-  disableMax485Driver();
 }
 
 void cmdDisable() {
@@ -178,7 +178,6 @@ void cmdDisable() {
   String respStr = String(id) + " disable ok";
   enableMax485Driver();
   Serial.println(respStr);
-  disableMax485Driver();
 }
 
 void cmdHome() {
@@ -186,14 +185,12 @@ void cmdHome() {
   String respStr = String(id) + " home start";
   enableMax485Driver();
   Serial.println(respStr);
-  disableMax485Driver();
 }
 void cmdHide() {
   stepperState->setPosition(StepperState::Position::HOME);
   String respStr = String(id) + " down start";
   enableMax485Driver();
   Serial.println(respStr);
-  disableMax485Driver();
 }
 
 void cmdShow() {
@@ -201,7 +198,6 @@ void cmdShow() {
   String respStr = String(id) + " up start";
   enableMax485Driver();
   Serial.println(respStr);
-  disableMax485Driver();
 }
 
 
@@ -278,16 +274,25 @@ void loop() {
   if (wasMoving && !isMoving) {
     Timer1.attachInterrupt(timerHandler);
   }
-  // If we are moving, do not spend clock cycles on parsing Serial, wait until idle
-  // if (isMoving) return;
-  if (!Serial.available()) return;
-  int c = Serial.read();
-  //while ((c = Serial.read()) > 0) {
-    if (c != '\n' && c > 0) {
-      inputString += (char) c;
+
+  // Set transmitter to receive after max485DriverEnableDuration has passed since transmit.
+  if (lastTransmitTimeMillis >= 0) {
+    if ((millis() - lastTransmitTimeMillis) >= max485DriverEnableDuration) {
+      disableMax485Driver();
+      lastTransmitTimeMillis = -1;
+    } else {
       return;
     }
-  //}
+  }
+
+  if (!Serial.available()) return;
+  // Only read one character per loop to not disrupt moving the targets for too long.
+  int c = Serial.read();
+  if (c != '\n' && c > 0) {
+    inputString += (char) c;
+    return;
+  }
+
   inputString.trim();
   if (inputString == pollCmdStr) {
     cmdPoll();
