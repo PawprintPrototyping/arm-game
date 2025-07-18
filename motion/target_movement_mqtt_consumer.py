@@ -5,6 +5,7 @@ import re
 import structlog
 import paho.mqtt.client as mqtt
 
+import oopsie
 from target_movement_serial import TargetMovementSerial
 
 MQTT_HOST = os.getenv("MQTT_HOST", "motion-display")

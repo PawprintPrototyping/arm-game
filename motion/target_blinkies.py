@@ -27,9 +27,9 @@ class TargetBlinkies(object):
         mqtt.single(f"/targets/{target_id}/enable", f"enable {target_id}", hostname=self.mqtt_host)
 
     def publish_disable(self, target_id):
-        if self.enabled:
-            logger.info("Disable target", target_id=target_id, action="disable")
-            mqtt.single(f"/targets/{target_id}/disable", f"disable {target_id}", hostname=self.mqtt_host)
+        #if self.enabled:
+        logger.info("Disable target", target_id=target_id, action="disable")
+        mqtt.single(f"/targets/{target_id}/disable", f"disable {target_id}", hostname=self.mqtt_host)
 
     def publish_up(self, target_id):
         logger.info("Move target up", target_id=target_id, action="up")
@@ -67,6 +67,8 @@ class TargetBlinkies(object):
                 targets_to_show_count = random.randint(2,4)
                 show_targets = random.sample(target_list, targets_to_show_count)
                 for t in show_targets:
+                    if not self.enabled:
+                        break
                     self.publish_up(t)
                     time.sleep(off_time)
 
@@ -75,6 +77,8 @@ class TargetBlinkies(object):
                 enable_targets = random.sample(show_targets, targets_to_enable_count)
 
                 for t in enable_targets:
+                    if not self.enabled:
+                        break
                     self.publish_enable(t)
 
                 # Dwell for a time

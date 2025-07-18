@@ -7,16 +7,20 @@ import time
 import structlog
 import paho.mqtt.client as mqtt
 
+import oopsie
 from target_blinkies import TargetBlinkies
 
 MQTT_HOST = os.getenv("MQTT_HOST", "localhost")
-DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "t")
+#DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "t")
+DEBUG = True
 
 
 logging.basicConfig(level=logging.INFO)
 if DEBUG:
     logging.basicConfig(level=logging.DEBUG)
 log = structlog.getLogger(__name__)
+if DEBUG:
+    log.debug("Debug true.")
 
 
 def on_connect(client, userdata, flags_dict, result):
@@ -45,12 +49,13 @@ def on_message(client, blinkies, msg):
 
     if msg.topic == "/scoreboard/rgb/start_timer":
         #blinkies.game_start()
+        log.debug("Enabling targets (flag)...")
         blinkies.enabled = True
 
     if msg.topic == "/scoreboard/timer/game_over":
         log.debug("Disabling targets...")
-        blinkies.game_over()
         blinkies.enabled = False
+        blinkies.game_over()
 
 
 mqttc = mqtt.Client()

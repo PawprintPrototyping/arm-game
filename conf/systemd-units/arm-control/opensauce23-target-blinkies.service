@@ -4,7 +4,7 @@ After=syslog.target network.target
 
 [Service]
 Environment="MQTT_HOST=arm-display"
-Environment="DEBUG=1"
+Environment="DEBUG=true"
 ExecStart=/home/pi/opensauce23/venv/bin/python /home/pi/opensauce23/motion/target_blinkies_mqtt_consumer.py
 Type=simple
 Restart=always

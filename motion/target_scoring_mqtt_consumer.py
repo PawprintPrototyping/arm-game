@@ -10,6 +10,7 @@ import RPi.GPIO as GPIO
 import structlog
 import paho.mqtt.client as mqtt
 
+import oopsie
 from target_scoring_serial import TargetScoringSerial
 
 MQTT_HOST = os.getenv("MQTT_HOST", "localhost")

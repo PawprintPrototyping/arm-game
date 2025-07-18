@@ -7,6 +7,7 @@ import structlog
 import paho.mqtt.client as mqtt
 
 from arm_serial import ArmSerial
+import oopsie
 
 MQTT_HOST = os.getenv("MQTT_HOST", "localhost")
 DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "t")
