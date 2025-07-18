@@ -13,7 +13,7 @@ DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "t")
 DEVICE = os.getenv("DEVICE", "/dev/ttySteppies")
 BAUDRATE = int(os.getenv("BAUDRATE", "9600"))
 
-TOPIC_REGEX = re.compile(r"^/target_movement/(?P<command>.*)$")
+TOPIC_REGEX = re.compile(r"^target_movement/(?P<command>.*)$")
 
 if DEBUG:
     logging.basicConfig(level=logging.DEBUG)
@@ -29,7 +29,7 @@ def on_connect(client, userdata, flags_dict, result):
         flags_dict=flags_dict,
         result=result,
     )
-    client.subscribe(f"/target_movement/#")
+    client.subscribe(f"target_movement/#")
 
 
 def on_message(client, target_movement, msg):

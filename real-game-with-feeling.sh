@@ -3,9 +3,9 @@
 
 function ctrl_c {
   echo "Interrupt caught, halting game..."
-  mosquitto_pub -h arm-display -t /scoreboard/rgb/game_over -m '{"text":"OOPSIE owo"}'
-  mosquitto_pub -h arm-display -t /motion/motion/stop -m ''
-  mosquitto_pub -h arm-display -t /target_movement/stop -m ''
+  mosquitto_pub -h arm-display -t scoreboard/rgb/game_over -m '{"text":"OOPSIE owo"}'
+  mosquitto_pub -h arm-display -t motion/motion/stop -m ''
+  mosquitto_pub -h arm-display -t target_movement/stop -m ''
   sleep 1
   disable_targets
   exit
@@ -13,7 +13,7 @@ function ctrl_c {
 
 function disable_targets {
   for i in `seq 1 8`; do
-    mosquitto_pub -h arm-display -t "/target/$i/disable" -m ''
+    mosquitto_pub -h arm-display -t "target/$i/disable" -m ''
     sleep 0.2
   done
 }
@@ -36,7 +36,7 @@ while true; do
       clear
       echo -e '\n\n\n'
       figlet -c "$i"
-      mosquitto_pub -h arm-display -t /scoreboard/cowbell -m ''
+      mosquitto_pub -h arm-display -t /coreboard/cowbell -m ''
       sleep 1
     done
 
@@ -47,25 +47,25 @@ while true; do
     echo
 
 
-    mosquitto_pub -h arm-display -t /scoreboard/digits/clear -m ''
-    mosquitto_pub -h arm-display -t /scoreboard/rgb/start_timer -m ''
-    mosquitto_pub -h arm-display -t /motion/motion/start -m ''
-    mosquitto_pub -h arm-display -t /target_movement/start -m ''
-    mosquitto_pub -h arm-display -t /scoreboard/player_info -m "{\"name\":\"$name\"}"
-    # mosquitto_pub -h arm-display -t /targets/3/enable -m ''
-    # mosquitto_pub -h arm-display -t /targets/2/enable -m ''
-    # mosquitto_pub -h arm-display -t /targets/1/enable -m ''
+    mosquitto_pub -h arm-display -t scoreboard/digits/clear -m ''
+    mosquitto_pub -h arm-display -t scoreboard/rgb/start_timer -m ''
+    mosquitto_pub -h arm-display -t motion/motion/start -m ''
+    mosquitto_pub -h arm-display -t target_movement/start -m ''
+    mosquitto_pub -h arm-display -t scoreboard/player_info -m "{\"name\":\"$name\"}"
+    # mosquitto_pub -h arm-display -t targets/3/enable -m ''
+    # mosquitto_pub -h arm-display -t targets/2/enable -m ''
+    # mosquitto_pub -h arm-display -t targets/1/enable -m ''
 
-    mosquitto_sub -h arm-display -t /scoreboard/timer/game_over -C 1 ||
-    mosquitto_pub -h arm-display -t /scoreboard/rgb/game_over -m "GAME OVER"
+    mosquitto_sub -h arm-display -t scoreboard/timer/game_over -C 1 ||
+    mosquitto_pub -h arm-display -t scoreboard/rgb/game_over -m "GAME OVER"
 
 
-    mosquitto_pub -h arm-display -t /motion/motion/stop -m ''
-    mosquitto_pub -h arm-display -t /target_movement/stop -m ''
+    mosquitto_pub -h arm-display -t motion/motion/stop -m ''
+    mosquitto_pub -h arm-display -t target_movement/stop -m ''
 
     sleep 1
     disable_targets
-    #mosquitto_pub -h arm-display -t /scoreboard/rgb/clear -m ""
+    #mosquitto_pub -h arm-display -t scoreboard/rgb/clear -m ""
     sleep 1
 
   done

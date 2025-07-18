@@ -28,12 +28,12 @@ def on_connect(client, userdata, flags_dict, result):
         flags_dict=flags_dict,
         result=result,
     )
-    client.subscribe(f"/motion/motion/#")
+    client.subscribe(f"motion/motion/#")
 
 
 """
-/motion/motion/start
-/motion/motion/stop
+motion/motion/start
+motion/motion/stop
 """
 
 
@@ -46,13 +46,13 @@ def on_message(client, robotserial, msg):
         log.warn("Payload is not valid JSON", mqtt_msg=msg.payload)
 
     match msg.topic:
-        case "/motion/motion/start":
+        case "motion/motion/start":
             log.debug("Set robot motion state to active")
             arm_serial.state = ArmSerial.ACTIVE
-        case "/motion/motion/stop":
+        case "motion/motion/stop":
             log.debug("Set robot motion state to park")
             arm_serial.state = ArmSerial.PARK
-        case "/motion/motion/idle":
+        case "motion/motion/idle":
             log.debug("Set robot motion state to idle")
             arm_serial.state = ArmSerial.IDLE
 

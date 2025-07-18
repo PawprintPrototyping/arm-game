@@ -28,7 +28,7 @@ def on_connect(client, userdata, flags_dict, result):
         flags_dict=flags_dict,
         result=result,
     )
-    client.subscribe(f"/scoreboard/rgb/#")
+    client.subscribe(f"scoreboard/rgb/#")
 
 
 def on_message(client, rgbmatrix, msg):
@@ -41,16 +41,16 @@ def on_message(client, rgbmatrix, msg):
     rgbmatrix.message_data = data
 
     match msg.topic:
-        case "/scoreboard/rgb/clear":
+        case "scoreboard/rgb/clear":
             rgbmatrix.state = Scoreboard.CLEAR
 
-        case "/scoreboard/rgb/start_timer":
+        case "scoreboard/rgb/start_timer":
             rgbmatrix.state = Scoreboard.TIMER
 
-        case "/scoreboard/rgb/game_over":
+        case "scoreboard/rgb/game_over":
             rgbmatrix.state = Scoreboard.GAME_OVER
 
-        case "/scoreboard/rgb/stop_gracefully":
+        case "scoreboard/rgb/stop_gracefully":
             rgbmatrix.stop = True
             rgbmatrix.delay_thread.join(timeout=10)
 

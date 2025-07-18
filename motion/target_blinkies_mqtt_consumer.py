@@ -31,28 +31,28 @@ def on_connect(client, userdata, flags_dict, result):
         flags_dict=flags_dict,
         result=result,
     )
-    client.subscribe(f"/scoreboard/timer/game_over")
-    client.subscribe(f"/scoreboard/rgb/start_timer")
+    client.subscribe(f"scoreboard/timer/game_over")
+    client.subscribe(f"scoreboard/rgb/start_timer")
 
 
 """
 Subscribes to:
-/targets/{id}/enable
-/targets/{id}/disable
-/targets/{id}/clear
+targets/{id}/enable
+targets/{id}/disable
+targets/{id}/clear
 
 Publishes to:
-/targets/{id}/hit
+targets/{id}/hit
 """
 def on_message(client, blinkies, msg):
     log.debug("on_message", topic=msg.topic, payload=msg.payload)
 
-    if msg.topic == "/scoreboard/rgb/start_timer":
+    if msg.topic == "scoreboard/rgb/start_timer":
         #blinkies.game_start()
         log.debug("Enabling targets (flag)...")
         blinkies.enabled = True
 
-    if msg.topic == "/scoreboard/timer/game_over":
+    if msg.topic == "scoreboard/timer/game_over":
         log.debug("Disabling targets...")
         blinkies.enabled = False
         blinkies.game_over()

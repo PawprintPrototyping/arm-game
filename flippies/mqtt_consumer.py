@@ -27,7 +27,7 @@ def on_connect(client, userdata, flags_dict, result):
         flags_dict=flags_dict,
         result=result,
     )
-    client.subscribe(f"/scoreboard/digits/#")
+    client.subscribe(f"scoreboard/digits/#")
 
 
 def on_message(client, flipdigits, msg):
@@ -39,11 +39,11 @@ def on_message(client, flipdigits, msg):
         log.warn("Payload is not valid JSON", mqtt_msg=msg)
 
     match msg.topic:
-        case "/scoreboard/digits/clear":
+        case "scoreboard/digits/clear":
             if flipdigits.delay_thread.is_alive():
                 flipdigits.delay_thread.join()
             flipdigits.clear()
-        case "/scoreboard/digits/set_number":
+        case "scoreboard/digits/set_number":
             delay = data.get("delay", 0)
             number = data.get("number")
             if number is not None:
@@ -53,13 +53,13 @@ def on_message(client, flipdigits, msg):
                 flipdigits.delay_thread.start()
             else:
                 log.error("Cannot set_number() - `number` is a required argument")
-        case "/scoreboard/digits/snake":
+        case "scoreboard/digits/snake":
             delay = data.get("delay", 0.1)
             flipdigits.delay_thread = threading.Thread(
                 target=flipdigits.snake, args=(delay,)
             )
             flipdigits.delay_thread.start()
-        case "/scoreboard/digits/set_digit":
+        case "scoreboard/digits/set_digit":
             if "address" in data and "number" in data:
                 flipdigits.set_digit(data["address"], data["number"])
             else:
