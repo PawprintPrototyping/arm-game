@@ -36,7 +36,7 @@ while true; do
       clear
       echo -e '\n\n\n'
       figlet -c "$i"
-      mosquitto_pub -h arm-display -t /coreboard/cowbell -m ''
+      mosquitto_pub -h arm-display -t scoreboard/cowbell -m ''
       sleep 1
     done
 
