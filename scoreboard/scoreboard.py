@@ -124,7 +124,7 @@ class Scoreboard(RGBBase):
         y = self.message_data.get("y", 25)
         graphics.DrawText(canvas, self.big_font, x, y, self.black, message)
         self.matrix.SwapOnVSync(canvas)
-        mqtt.single(f"/scoreboard/timer/game_over", "GAME OVER", hostname=MQTT_HOSTNAME)
+        mqtt.single(f"scoreboard/timer/game_over", "GAME OVER", hostname=MQTT_HOSTNAME)
 
     def clear(self):
         canvas = self.matrix.CreateFrameCanvas()
@@ -146,7 +146,7 @@ class Scoreboard(RGBBase):
           "Do a barrel roll!",
         ]
         return random.choice(potential_messages)
-        
+
 
 # Main function
 if __name__ == "__main__":

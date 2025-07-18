@@ -20,7 +20,7 @@ BAUDRATE = int(os.getenv("BAUDRATE", "9600"))
 DATABASE = os.getenv("DATABASE", "/home/pi/scores.db")
 BELL_PIN = 7
 
-TOPIC_REGEX = re.compile(r"^/targets/(?P<id>\d)/(?P<command>.*)$")
+TOPIC_REGEX = re.compile(r"^targets/(?P<id>\d)/(?P<command>.*)$")
 
 
 structlog.configure(wrapper_class=structlog.make_filtering_bound_logger(logging.INFO))
@@ -44,23 +44,23 @@ def on_connect(client, userdata, flags_dict, result):
         flags_dict=flags_dict,
         result=result,
     )
-    client.subscribe(f"/targets/#")
-    client.subscribe(f"/scoreboard/rgb/start_timer")
-    client.subscribe(f"/scoreboard/timer/game_over")
-    client.subscribe(f"/scoreboard/player_info")
+    client.subscribe(f"targets/#")
+    client.subscribe(f"scoreboard/rgb/start_timer")
+    client.subscribe(f"scoreboard/timer/game_over")
+    client.subscribe(f"scoreboard/player_info")
 
 
 """
 Subscribes to:
-/targets/{id}/enable
-/targets/{id}/disable
-/targets/{id}/clear
-/targets/{id}/home
-/targets/{id}/up
-/targets/{id}/down
+targets/{id}/enable
+targets/{id}/disable
+targets/{id}/clear
+targets/{id}/home
+targets/{id}/up
+targets/{id}/down
 
 Publishes to:
-/targets/{id}/hit
+targets/{id}/hit
 """
 
 
@@ -96,11 +96,11 @@ def on_message(client, targetserial, msg):
     except json.JSONDecodeError:
         log.warn("Payload is not valid JSON", mqtt_msg=msg.payload)
 
-    if msg.topic == "/scoreboard/rgb/start_timer":
+    if msg.topic == "scoreboard/rgb/start_timer":
         targetserial.score = 0
         return
 
-    if msg.topic == "/scoreboard/timer/game_over":
+    if msg.topic == "scoreboard/timer/game_over":
         # Record high score and reset player info
         if targetserial.player_info["name"] != "NO NAME":
             record_score(targetserial.player_info, targetserial.score)
@@ -111,7 +111,7 @@ def on_message(client, targetserial, msg):
             ring_bell_high_score()
         return
 
-    if msg.topic == "/scoreboard/player_info":
+    if msg.topic == "scoreboard/player_info":
         if "name" in data:
             targetserial.player_info = data
         else:
