@@ -24,24 +24,24 @@ class TargetBlinkies(object):
 
     def publish_enable(self, target_id):
         logger.info("Enable target", target_id=target_id, actuion="enable")
-        mqtt.single(f"/targets/{target_id}/enable", f"enable {target_id}", hostname=self.mqtt_host)
+        mqtt.single(f"targets/{target_id}/enable", f"enable {target_id}", hostname=self.mqtt_host)
 
     def publish_disable(self, target_id):
         #if self.enabled:
         logger.info("Disable target", target_id=target_id, action="disable")
-        mqtt.single(f"/targets/{target_id}/disable", f"disable {target_id}", hostname=self.mqtt_host)
+        mqtt.single(f"targets/{target_id}/disable", f"disable {target_id}", hostname=self.mqtt_host)
 
     def publish_up(self, target_id):
         logger.info("Move target up", target_id=target_id, action="up")
-        mqtt.single(f"/targets/{target_id}/up", f"up {target_id}", hostname=self.mqtt_host)
+        mqtt.single(f"targets/{target_id}/up", f"up {target_id}", hostname=self.mqtt_host)
 
     def publish_down(self, target_id):
         logger.info("Move target down", target_id=target_id, action="down")
-        mqtt.single(f"/targets/{target_id}/down", f"down {target_id}", hostname=self.mqtt_host)
+        mqtt.single(f"targets/{target_id}/down", f"down {target_id}", hostname=self.mqtt_host)
 
     def publish_home(self, target_id):
         logger.info("Home target", target_id=target_id, action="home")
-        mqtt.single(f"/targets/{target_id}/home", f"home {target_id}", hostname=self.mqtt_host)
+        mqtt.single(f"targets/{target_id}/home", f"home {target_id}", hostname=self.mqtt_host)
 
     def game_start(self):
         logger.info("Home all targets")
