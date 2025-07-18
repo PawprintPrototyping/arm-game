@@ -14,8 +14,8 @@ quit() {
 while [ 1 ]; do
   mosquitto_sub -h $MQTT_HOST \
     -C 1 \
-    -t "/targets/+/hit" \
-    -t /scoreboard/cowbell \
+    -t "targets/+/hit" \
+    -t scoreboard/cowbell \
     || exit
 
   if ! [ -e "/sys/class/gpio/gpio${PIN}/value" ] ; then

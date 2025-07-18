@@ -78,13 +78,13 @@ class TargetScoringSerial(SerialBase):
 
     def publish_hit(self, index):
         TargetScoringSerial.logger.info("Publish hit for target", target=index)
-        mqtt.single(f"/targets/{index}/hit", f"hit {index}", hostname=MQTT_HOST)
-        if index == 2:
+        mqtt.single(f"targets/{index}/hit", f"hit {index}", hostname=MQTT_HOST)
+        if index == 1:
             self.score += 75
         else:
             self.score += 69
         logger.info("Current score", score=self.score)
-        mqtt.single(f"/scoreboard/digits/set_number", json.dumps({"number":self.score}), hostname=MQTT_HOST)
+        mqtt.single(f"scoreboard/digits/set_number", json.dumps({"number":self.score}), hostname=MQTT_HOST)
 
     def poll(self, index):
         TargetScoringSerial.logger.debug("Writing poll command", index=index)
@@ -97,10 +97,10 @@ class TargetScoringSerial(SerialBase):
         except ValueError:
             logger.warn(f"Unable to unpack values ('{line}')")
             self.TARGET_ERROR_COUNTS[index] += 1
-            mqtt.single(f"/target/{index}/errors", json.dumps({"target": index, "error_count": self.TARGET_ERROR_COUNTS[index]}), hostname=MQTT_HOST)
+            mqtt.single(f"target/{index}/errors", json.dumps({"target": index, "error_count": self.TARGET_ERROR_COUNTS[index]}), hostname=MQTT_HOST)
             return False
 
-        #mqtt.single(f"/target/{index}/healthy", json.dumps({"target": index, "response": str(line)}), hostname=MQTT_HOST)
+        #mqtt.single(f"target/{index}/healthy", json.dumps({"target": index, "response": str(line)}), hostname=MQTT_HOST)
         logger.debug("Target poll", index=index, hit=hit, state=state, pos=pos)
         if index != int(idx):
             return None
