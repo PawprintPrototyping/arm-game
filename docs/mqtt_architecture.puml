@@ -1,0 +1,70 @@
+@startuml MQTT Service Architecture
+!theme plain
+title ARM Game - MQTT Service Interactions
+
+' ── Participants ──────────────────────────────────────────────
+participant "Game Console\n(real-game-with-feeling.sh)" as Game #LightBlue
+participant "Scoreboard RGB\n(scoreboard/mqtt_consumer.py)" as ScoreboardRGB #LightGreen
+participant "Flip Digits\n(flippies/mqtt_consumer.py)" as Flippies #LightGreen
+participant "Arm Control\n(motion/arm_mqtt_consumer.py)" as Arm #Orange
+participant "Target Blinkies\n(motion/target_blinkies_\nmqtt_consumer.py)" as Blinkies #Orange
+participant "Target Scoring\n(motion/target_scoring_\nmqtt_consumer.py)" as Scoring #Orange
+participant "Target Movement\n(motion/target_movement_\nmqtt_consumer.py)" as Movement #Orange
+participant "Cowbell\n(mqtt_cowbell.sh)" as Cowbell #Plum
+participant "Ding Ding\n(mqtt_dingding.sh)" as DingDing #Plum
+
+== Pre-Game ==
+
+Game -> Scoring : /target/{1..8}/disable
+Game -> Cowbell : /scoreboard/cowbell
+
+== Game Start ==
+
+Game -> Flippies : /scoreboard/digits/clear
+
+Game -> ScoreboardRGB : /scoreboard/rgb/start_timer
+Game -> Blinkies : /scoreboard/rgb/start_timer
+Game -> Scoring : /scoreboard/rgb/start_timer
+Game -> DingDing : /scoreboard/rgb/start_timer
+
+Game -> Arm : /motion/motion/start
+
+Game -> Movement : /target_movement/start
+
+Game -> Scoring : /scoreboard/player_info
+
+== Gameplay Loop ==
+
+note over Blinkies : Randomly raises, enables,\ndisables, and lowers targets
+
+Blinkies -> Scoring : /targets/{id}/up
+Blinkies -> Scoring : /targets/{id}/enable
+Blinkies -> Scoring : /targets/{id}/disable
+Blinkies -> Scoring : /targets/{id}/down
+Blinkies -> Scoring : /targets/{id}/home
+
+note over Scoring : Polls targets via serial.\nPublishes score on hit.
+
+Scoring -> Cowbell : /targets/{id}/hit
+Scoring -> Flippies : /scoreboard/digits/set_number
+
+== Timer Expires ==
+
+note over ScoreboardRGB : Timer reaches 0:00
+
+ScoreboardRGB -> Game : /scoreboard/timer/game_over\n(unblocks mosquitto_sub -C 1)
+ScoreboardRGB -> Blinkies : /scoreboard/timer/game_over
+ScoreboardRGB -> Scoring : /scoreboard/timer/game_over
+ScoreboardRGB -> DingDing : /scoreboard/timer/game_over
+
+note over Scoring : Records score to SQLite.\nRings bell if high score.
+note over Blinkies : Disables & homes all targets.
+
+== Game Over ==
+
+Game -> ScoreboardRGB : /scoreboard/rgb/game_over
+Game -> Arm : /motion/motion/stop
+Game -> Movement : /target_movement/stop
+Game -> Scoring : /target/{1..8}/disable
+
+@enduml

@@ -1,0 +1,117 @@
+@startuml MQTT Topic Map
+!theme plain
+title ARM Game - MQTT Topic Map
+
+' ── Layout ──────────────────────────────────────────────
+left to right direction
+
+' ── Services ──────────────────────────────────────────────
+rectangle "Game Console\n//real-game-with-feeling.sh//" as Game #LightBlue
+rectangle "Scoreboard RGB\n//scoreboard/mqtt_consumer.py//" as ScoreboardRGB #LightGreen
+rectangle "Flip Digits\n//flippies/mqtt_consumer.py//" as Flippies #LightGreen
+rectangle "Arm Control\n//motion/arm_mqtt_consumer.py//" as Arm #Orange
+rectangle "Target Blinkies\n//motion/target_blinkies_mqtt_consumer.py//" as Blinkies #Orange
+rectangle "Target Scoring\n//motion/target_scoring_mqtt_consumer.py//" as Scoring #Orange
+rectangle "Target Movement\n//motion/target_movement_mqtt_consumer.py//" as Movement #Orange
+rectangle "Cowbell\n//mqtt_cowbell.sh//" as Cowbell #Plum
+rectangle "Ding Ding\n//mqtt_dingding.sh//" as DingDing #Plum
+
+' ── MQTT Topics (as queues) ──────────────────────────────
+queue "/scoreboard/rgb/#" as rgb_topic {
+  card "clear" as rgb_clear
+  card "start_timer" as rgb_start
+  card "game_over" as rgb_gameover
+  card "stop_gracefully" as rgb_stop
+}
+
+queue "/scoreboard/digits/#" as digits_topic {
+  card "clear" as dig_clear
+  card "set_number" as dig_setnum
+  card "set_digit" as dig_setdig
+  card "snake" as dig_snake
+}
+
+queue "/scoreboard/timer/game_over" as timer_gameover
+
+queue "/scoreboard/player_info" as player_info
+queue "/scoreboard/cowbell" as cowbell_topic
+queue "/scoreboard/bell" as bell_topic
+
+queue "/motion/motion/#" as motion_topic {
+  card "start" as mot_start
+  card "stop" as mot_stop
+  card "idle" as mot_idle
+}
+
+queue "/target_movement/#" as tgtmov_topic {
+  card "start" as tm_start
+  card "stop" as tm_stop
+}
+
+queue "/targets/{id}/..." as targets_topic {
+  card "enable" as tgt_enable
+  card "disable" as tgt_disable
+  card "clear" as tgt_clear
+  card "home" as tgt_home
+  card "up" as tgt_up
+  card "down" as tgt_down
+  card "hit" as tgt_hit
+}
+
+queue "/target/{id}/..." as target_single {
+  card "disable" as ts_disable
+  card "errors" as ts_errors
+}
+
+' ── Publish arrows (solid) ──────────────────────────────
+Game -[#blue]-> rgb_start : pub
+Game -[#blue]-> rgb_gameover : pub
+Game -[#blue]-> rgb_clear : pub
+Game -[#blue]-> dig_clear : pub
+Game -[#blue]-> mot_start : pub
+Game -[#blue]-> mot_stop : pub
+Game -[#blue]-> tm_start : pub
+Game -[#blue]-> tm_stop : pub
+Game -[#blue]-> player_info : pub
+Game -[#blue]-> cowbell_topic : pub
+Game -[#blue]-> ts_disable : pub
+
+ScoreboardRGB -[#blue]-> timer_gameover : pub
+
+Scoring -[#blue]-> tgt_hit : pub
+Scoring -[#blue]-> dig_setnum : pub
+Scoring -[#blue]-> ts_errors : pub
+
+Blinkies -[#blue]-> tgt_enable : pub
+Blinkies -[#blue]-> tgt_disable : pub
+Blinkies -[#blue]-> tgt_up : pub
+Blinkies -[#blue]-> tgt_down : pub
+Blinkies -[#blue]-> tgt_home : pub
+
+' ── Subscribe arrows (dashed) ──────────────────────────
+rgb_topic -[#green,dashed]-> ScoreboardRGB : sub /scoreboard/rgb/#
+digits_topic -[#green,dashed]-> Flippies : sub /scoreboard/digits/#
+motion_topic -[#green,dashed]-> Arm : sub /motion/motion/#
+tgtmov_topic -[#green,dashed]-> Movement : sub /target_movement/#
+targets_topic -[#green,dashed]-> Scoring : sub /targets/#
+
+rgb_start -[#green,dashed]-> Blinkies : sub
+rgb_start -[#green,dashed]-> Scoring : sub
+timer_gameover -[#green,dashed]-> Blinkies : sub
+timer_gameover -[#green,dashed]-> Scoring : sub
+timer_gameover -[#green,dashed]-> DingDing : sub
+player_info -[#green,dashed]-> Scoring : sub
+
+tgt_hit -[#green,dashed]-> Cowbell : sub /targets/+/hit
+cowbell_topic -[#green,dashed]-> Cowbell : sub
+bell_topic -[#green,dashed]-> DingDing : sub
+rgb_start -[#green,dashed]-> DingDing : sub
+
+' ── Legend ──────────────────────────────────────────────
+legend right
+  |= Color |= Meaning |
+  | <#blue> | Publish |
+  | <#green> | Subscribe |
+endlegend
+
+@enduml
