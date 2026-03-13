@@ -11,7 +11,17 @@ jobs:
       - name: Checkout Source
         uses: actions/checkout@v4
 
-      - name: Generate SVG Diagrams
+      - name: Generate PNG Diagrams
         uses: holowinski/plantuml-github-action@1.2025.4
         with:
           args: -v -tpng docs/*.puml
+
+      - name: Commit output
+        run: |
+          git config --global user.name "${{ github.actor }}"
+          git config --global user.email "${{ github.actor }}@users.noreply.github.com"
+
+          git add docs/
+          git commit -m 'Generate PlantUML diagrams'
+
+          git push
