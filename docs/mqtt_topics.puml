@@ -58,7 +58,7 @@ queue "/targets/{id}/..." as targets_topic {
   card "hit" as tgt_hit
 }
 
-queue "/target/{id}/..." as target_single {
+queue "/targets/{id}/..." as target_single {
   card "disable" as ts_disable
   card "errors" as ts_errors
 }

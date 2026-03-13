@@ -13,7 +13,7 @@ function ctrl_c {
 
 function disable_targets {
   for i in `seq 1 8`; do
-    mosquitto_pub -h arm-display -t "/target/$i/disable" -m ''
+    mosquitto_pub -h arm-display -t "/targets/$i/disable" -m ''
     sleep 0.2
   done
 }
@@ -52,9 +52,6 @@ while true; do
     mosquitto_pub -h arm-display -t /motion/motion/start -m ''
     mosquitto_pub -h arm-display -t /target_movement/start -m ''
     mosquitto_pub -h arm-display -t /scoreboard/player_info -m "{\"name\":\"$name\"}"
-    # mosquitto_pub -h arm-display -t /targets/3/enable -m ''
-    # mosquitto_pub -h arm-display -t /targets/2/enable -m ''
-    # mosquitto_pub -h arm-display -t /targets/1/enable -m ''
 
     mosquitto_sub -h arm-display -t /scoreboard/timer/game_over -C 1 ||
     mosquitto_pub -h arm-display -t /scoreboard/rgb/game_over -m "GAME OVER"

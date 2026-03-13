@@ -15,7 +15,7 @@ participant "Ding Ding\n(mqtt_dingding.sh)" as DingDing #Plum
 
 == Pre-Game ==
 
-Game -> Scoring : /target/{1..8}/disable
+Game -> Scoring : /targets/{1..8}/disable
 Game -> Cowbell : /scoreboard/cowbell
 
 == Game Start ==
@@ -65,6 +65,6 @@ note over Blinkies : Disables & homes all targets.
 Game -> ScoreboardRGB : /scoreboard/rgb/game_over
 Game -> Arm : /motion/motion/stop
 Game -> Movement : /target_movement/stop
-Game -> Scoring : /target/{1..8}/disable
+Game -> Scoring : /targets/{1..8}/disable
 
 @enduml
