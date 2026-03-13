@@ -1,0 +1,17 @@
+name: Generate PlantUML Diagrams
+on: [push, pull_request]
+
+jobs:
+  plantuml:
+    runs-on: ubuntu-latest
+    permissions:                # Job-level permissions configuration starts here
+      contents: write           # 'write' access to repository contents
+      pull-requests: write      # 'write' access to pull requests
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v4
+
+      - name: Generate SVG Diagrams
+        uses: holowinski/plantuml-github-action@1.2025.4
+        with:
+          args: -v -tpng docs/*.puml
