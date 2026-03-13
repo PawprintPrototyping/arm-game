@@ -11,17 +11,24 @@ jobs:
       - name: Checkout Source
         uses: actions/checkout@v4
 
+      - name: Get changed UML files
+        id: getfile
+        run: |
+          files=$(git diff --name-only HEAD^ HEAD | grep .puml | xargs)
+          echo "files=$files" >> $GITHUB_OUTPUT
+          if [ -n "$files" ]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+
       - name: Generate PNG Diagrams
+        if: steps.getfile.outputs.changed == 'true'
         uses: holowinski/plantuml-github-action@1.2025.4
         with:
-          args: -v -tpng docs/*.puml
+          args: -v -tpng docs/*.puml ${{steps.getfile.outputs.files}}
 
-      - name: Commit output
-        run: |
-          git config --global user.name "${{ github.actor }}"
-          git config --global user.email "${{ github.actor }}@users.noreply.github.com"
-
-          git add docs/
-          git commit -m 'Generate PlantUML diagrams'
-
-          git push
+      - name: Push Local Changes
+        if: steps.getfile.outputs.changed == 'true'
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Generate PNGs for PlantUML diagrams"
+          branch: ${{ github.head_ref }}
