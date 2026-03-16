@@ -14,7 +14,6 @@ jobs:
           fetch-depth: 0
 
       - name: Get changed UML files
-      - name: Get changed UML files
         id: changed-uml-files
         uses: tj-actions/changed-files@22103cc46bda19c2b464ffe86db46df6922fd323 # v47.0.5
         with:
@@ -24,13 +23,13 @@ jobs:
             *.puml
 
       - name: Generate PNG Diagrams
-        if: steps.getfile.outputs.changed == 'true'
+        if: steps.changed-uml-files.outputs.any_changed == 'true'
         uses: holowinski/plantuml-github-action@1.2025.4
         with:
           args: -v -tpng ${{ steps.changed-uml-files.outputs.all_changed_files }}
 
       - name: Push Local Changes
-        if: steps.getfile.outputs.changed == 'true'
+        if: steps.changed-uml-files.outputs.any_changed == 'true'
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "Generate PNGs for PlantUML diagrams"
