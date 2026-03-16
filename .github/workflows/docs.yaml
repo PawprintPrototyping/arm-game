@@ -10,21 +10,24 @@ jobs:
     steps:
       - name: Checkout Source
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Get changed UML files
-        id: getfile
-        run: |
-          files=$(git diff --name-only HEAD^ HEAD | grep .puml | xargs)
-          echo "files=$files" >> $GITHUB_OUTPUT
-          if [ -n "$files" ]; then
-            echo "changed=true" >> $GITHUB_OUTPUT
-          fi
+      - name: Get changed UML files
+        id: changed-uml-files
+        uses: tj-actions/changed-files@22103cc46bda19c2b464ffe86db46df6922fd323 # v47.0.5
+        with:
+          # Avoid using single or double quotes for multiline patterns
+          files: |
+            *.plantuml
+            *.puml
 
       - name: Generate PNG Diagrams
         if: steps.getfile.outputs.changed == 'true'
         uses: holowinski/plantuml-github-action@1.2025.4
         with:
-          args: -v -tpng docs/*.puml ${{steps.getfile.outputs.files}}
+          args: -v -tpng ${{ steps.changed-uml-files.outputs.all_changed_files }}
 
       - name: Push Local Changes
         if: steps.getfile.outputs.changed == 'true'
