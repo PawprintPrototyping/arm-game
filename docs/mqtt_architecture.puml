@@ -2,7 +2,7 @@
 !theme plain
 title ARM Game - MQTT Service Interactions
 
-' -- Participants -----------------------------
+' -- Participants ------------------------------
 participant "Game Console\n(real-game-with-feeling.sh)" as Game #LightBlue
 participant "Scoreboard RGB\n(scoreboard/mqtt_consumer.py)" as ScoreboardRGB #LightGreen
 participant "Flip Digits\n(flippies/mqtt_consumer.py)" as Flippies #LightGreen

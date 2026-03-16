@@ -2,10 +2,10 @@
 !theme plain
 title ARM Game - MQTT Topic Map
 
-' ── Layout ──────────────────────────────────────────────
+' ── Layout ─────────────────────────────────────────────
 left to right direction
 
-' ── Services ────────────────────────────────────────────
+' ── Services ───────────────────────────────────────────
 rectangle "Game Console\n//real-game-with-feeling.sh//" as Game #LightBlue
 rectangle "Scoreboard RGB\n//scoreboard/mqtt_consumer.py//" as ScoreboardRGB #LightGreen
 rectangle "Flip Digits\n//flippies/mqtt_consumer.py//" as Flippies #LightGreen

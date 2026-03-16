@@ -19,8 +19,7 @@ jobs:
         with:
           # Avoid using single or double quotes for multiline patterns
           files: |
-            *.plantuml
-            *.puml
+            docs/*.puml
 
       - name: Generate PNG Diagrams
         if: steps.changed-uml-files.outputs.any_changed == 'true'
