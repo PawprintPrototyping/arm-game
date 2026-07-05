@@ -46,7 +46,6 @@ while true; do
     figlet -c "GO!"
     echo
 
-
     mosquitto_pub -h arm-display -t scoreboard/digits/clear -m ''
     mosquitto_pub -h arm-display -t scoreboard/rgb/start_timer -m ''
     mosquitto_pub -h arm-display -t motion/motion/start -m ''
