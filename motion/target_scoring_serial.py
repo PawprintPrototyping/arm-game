@@ -13,8 +13,8 @@ logger = structlog.get_logger()
 
 
 class TargetScoringSerial(SerialBase):
-    #TARGET_IDS = [1, 2, 3]
-    TARGET_IDS = [1, 2, 4, 6, 7]
+    TARGET_IDS = [3, 7]
+    #TARGET_IDS = [1, 2, 4, 6, 7]
     TARGET_ERROR_COUNTS = dict.fromkeys(TARGET_IDS, 0)
     COMMAND_CLEAR = "clear {index}\n"
     COMMAND_ENABLE = "enable {index}\n"

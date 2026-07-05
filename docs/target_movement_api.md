@@ -6,12 +6,12 @@ See the corresponding Arduino sketch in [target_controller/target_stepper](https
 
 Also pretty dead-nuts stupid simple.  The two internal states are `flail` and `stop`.
 
-## Subscribes to `/target_movement/#`
+## Subscribes to `target_movement/#`
 
-### `/target_movement/start`
+### `target_movement/start`
 
 Starts the target platform movement (sends `flail` command to the stepper controller).  No arguments.
 
-### `/target_movement/stop`
+### `target_movement/stop`
 
 Stops the target platform movement.  No arguments.

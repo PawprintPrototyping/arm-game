@@ -4,11 +4,11 @@ The target blinkies service orchestrates enabling targets during gameplay.  It r
 
 ## Subscribes
 
-### `/scoreboard/rgb/start_timer`
+### `scoreboard/rgb/start_timer`
 
 Enables the target sequencer.  When received, the service begins randomly raising and enabling targets.  No arguments.
 
-### `/scoreboard/timer/game_over`
+### `scoreboard/timer/game_over`
 
 Disables the target sequencer.  All targets are disabled and homed.  No arguments.
 
@@ -16,22 +16,22 @@ Disables the target sequencer.  All targets are disabled and homed.  No argument
 
 The service publishes to the following topics to control individual targets via the target scoring service:
 
-### `/targets/{id}/enable`
+### `targets/{id}/enable`
 
 Activates hit detection on the specified target.
 
-### `/targets/{id}/disable`
+### `targets/{id}/disable`
 
 Deactivates hit detection on the specified target.
 
-### `/targets/{id}/up`
+### `targets/{id}/up`
 
 Raises the specified target into view.
 
-### `/targets/{id}/down`
+### `targets/{id}/down`
 
 Lowers the specified target out of view.
 
-### `/targets/{id}/home`
+### `targets/{id}/home`
 
 Sends the specified target to its home position.

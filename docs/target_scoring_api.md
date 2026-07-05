@@ -8,39 +8,39 @@ All arguments are passed as a JSON-encoded payload.
 
 ## Subscribes
 
-### `/targets/{id}/enable`
+### `targets/{id}/enable`
 
 Enables hit detection on the specified target.  No arguments.
 
-### `/targets/{id}/disable`
+### `targets/{id}/disable`
 
 Disables hit detection on the specified target.  No arguments.
 
-### `/targets/{id}/clear`
+### `targets/{id}/clear`
 
 Clears the hit state on the specified target.  No arguments.
 
-### `/targets/{id}/home`
+### `targets/{id}/home`
 
 Sends the specified target to its home position.  No arguments.
 
-### `/targets/{id}/up`
+### `targets/{id}/up`
 
 Raises the specified target.  No arguments.
 
-### `/targets/{id}/down`
+### `targets/{id}/down`
 
 Lowers the specified target.  No arguments.
 
-### `/scoreboard/rgb/start_timer`
+### `scoreboard/rgb/start_timer`
 
 Resets the current score to 0 for a new game.  No arguments.
 
-### `/scoreboard/timer/game_over`
+### `scoreboard/timer/game_over`
 
 Records the final score to the database (if a player name is set) and rings the bell if a high score was achieved.  Resets player info afterwards.  No arguments.
 
-### `/scoreboard/player_info`
+### `scoreboard/player_info`
 
 Sets the current player's info for score recording.
 
@@ -48,16 +48,16 @@ Sets the current player's info for score recording.
 
 ## Publishes
 
-### `/targets/{id}/hit`
+### `targets/{id}/hit`
 
 Published when a target registers a hit.  Payload: `"hit {id}"`.
 
-### `/scoreboard/digits/set_number`
+### `scoreboard/digits/set_number`
 
 Published after each hit to update the flipdigit score display.  Payload: JSON `{"number": <score>}`.
 
 Scoring: target 2 awards 75 points, all other targets award 69 points.
 
-### `/target/{id}/errors`
+### `target/{id}/errors`
 
 Published when a target poll response cannot be parsed.  Payload: JSON `{"target": <id>, "error_count": <count>}`.
