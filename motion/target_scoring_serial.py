@@ -11,11 +11,14 @@ from serial_base import SerialBase
 MQTT_HOST = os.getenv("MQTT_HOST", "localhost")
 logger = structlog.get_logger()
 
+# Remove a target if we haven't heard from it in this amount of time
+LAST_HEARD_THRESHOLD_SECONDS = 1
+
 
 class TargetScoringSerial(SerialBase):
-    TARGET_IDS = [3, 7]
+    TARGET_IDS = [3, 5, 7]
     #TARGET_IDS = [1, 2, 4, 6, 7]
-    TARGET_ERROR_COUNTS = dict.fromkeys(TARGET_IDS, 0)
+    TARGET_ERRORS = dict.fromkeys(TARGET_IDS, {"count": 0, "last_error": time.time(), "last_heard": 0, "rate": 0})
     COMMAND_CLEAR = "clear {index}\n"
     COMMAND_ENABLE = "enable {index}\n"
     COMMAND_DISABLE = "disable {index}\n"
@@ -96,11 +99,25 @@ class TargetScoringSerial(SerialBase):
             idx, cmd, state, hit, pos = line.split()
         except ValueError:
             logger.warn(f"Unable to unpack values ('{line}')")
-            self.TARGET_ERROR_COUNTS[index] += 1
-            mqtt.single(f"target/{index}/errors", json.dumps({"target": index, "error_count": self.TARGET_ERROR_COUNTS[index]}), hostname=MQTT_HOST)
+            self.TARGET_ERRORS[index]["count"] += 1
+            now = time.time()
+            error_rate = 1 / self.TARGET_ERRORS[index]["last_error"] - now
+            self.TARGET_ERRORS[index]["rate"] = (error_rate + self.TARGET_ERRORS[index]["rate"]) / 2
+            self.TARGET_ERRORS[index]["last_error"] = now
+            
+            mqtt.single(f"target/{index}/errors", json.dumps(
+                {"target": index, 
+                "error_count": self.TARGET_ERRORS[index]["count"],
+                "error_rate": self.TARGET_ERRORS[index]["rate"],
+                "error_last": self.TARGET_ERRORS[index]["last_error"],
+            }), hostname=MQTT_HOST)
+
+            if now - self.TARGET_ERRORS[index]["last_error"] >= LAST_HEARD_THRESHOLD_SECONDS:
+                self.TARGET_IDS.remove(index)
             return False
 
         #mqtt.single(f"target/{index}/healthy", json.dumps({"target": index, "response": str(line)}), hostname=MQTT_HOST)
+        self.TARGET_ERRORS[index]["last_heard"] = time.time()
         logger.debug("Target poll", index=index, hit=hit, state=state, pos=pos)
         if index != int(idx):
             return None
