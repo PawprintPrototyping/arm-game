@@ -1,5 +1,10 @@
 asyncio-paho==0.6.0
+paho-mqtt>=1.6,<2
 pyserial
 structlog==23.1.0
 RPi.GPIO~=0.7.1
 sentry-sdk
+
+# Dashboard
+streamlit>=1.36,<2
+streamlit-autorefresh>=1.0,<2

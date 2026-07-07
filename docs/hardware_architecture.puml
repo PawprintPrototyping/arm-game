@@ -1,0 +1,87 @@
+@startuml Hardware Architecture
+!theme plain
+title ARM Game - Hardware Architecture
+
+node "Arm Control Pi" as ControlPi #LightBlue {
+    component "Target Blinkies Service" as BlinkiesSvc
+    component "Target Scoring Service" as ScoringSvc
+    component "Target Movement Service" as MovementSvc
+    component "Cowbell Service" as CowbellSvc
+    component "Ding Ding Service" as DingDingSvc
+    component "Arm Control Service" as ArmSvc
+}
+
+node "Scoreboard Pi" as ScoreboardPi #LightGreen {
+    component "MQTT Broker\n(Mosquitto)" as MQTT
+    component "Scoreboard RGB Service" as ScoreboardSvc
+    component "Flip Digits Service" as FlippiesSvc
+}
+
+node "VT520 Terminal" as Terminal #LightBlue {
+}
+
+node "Robot Arm Controller" as ArmController #Orange {
+}
+
+node "SysIO Box" as SysIO #Orange {
+    component "E-Stop" as EStop
+}
+
+node "Stack Light" as StackLight #Orange {
+}
+
+node "Target Array" as Targets #Orange {
+    component "Target 1..8\n(RS485 devices)" as TargetDevices
+}
+
+node "Target Movement Arduino" as MovementArduino #Orange {
+    component "Stepper Driver Left" as StepperL
+    component "Stepper Driver Right" as StepperR
+}
+
+node "Bells" as Bells #Plum {
+    component "Cowbell\n(relay-driven)" as CowbellHW
+    component "Ding Ding\n(relay-driven)" as DingDingHW
+}
+
+node "RGB Matrix Display" as RGBMatrix #LightGreen {
+    component "HUB75 Panels\n(daisy-chained)" as HUB75
+}
+
+node "Flip Digit Display" as FlipDisplay #LightGreen {
+    component "Flip Digits\n(RS485 device)" as FlipDigitsHW
+}
+
+node "Network" as Network #WhiteSmoke {
+    component "Router\n(wired ethernet)" as Router
+}
+
+
+' Network
+ControlPi -down- ScoreboardPi : Ethernet
+
+' MQTT (logical, over LAN)
+ControlPi ..> MQTT : MQTT over LAN
+
+' VT520 terminal (primary UI)
+ControlPi -up-> Terminal : Serial\n(getty)
+
+' Arm Control Pi interfaces
+ArmSvc -right-> ArmController : Serial (USB)
+ArmController -right-> SysIO
+SysIO -right-> StackLight
+BlinkiesSvc -down-> TargetDevices : RS485\n(shared bus,\nUSB adapter)
+ScoringSvc <-down- TargetDevices : RS485\n(shared bus,\nUSB adapter)
+MovementSvc -down-> MovementArduino : Serial (USB)
+CowbellSvc -down-> CowbellHW : GPIO relay
+DingDingSvc -down-> DingDingHW : GPIO relay
+
+' Scoreboard Pi interfaces
+ScoreboardSvc -down-> HUB75 : GPIO hat\n(DMA)
+FlippiesSvc -down-> FlipDigitsHW : RS485\n(USB adapter)
+
+' Arduino to steppers
+MovementArduino -down-> StepperL
+MovementArduino -down-> StepperR
+
+@enduml

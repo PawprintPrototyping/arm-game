@@ -12,3 +12,7 @@ Another overview of how each topic queue and component interacts:
 ![MQTT Topic Map](https://raw.githubusercontent.com/PawprintPrototyping/arm-game/refs/heads/main/docs/MQTT%20Topic%20Map.png)
 
 Detailed MQTT Topic API documentation can be found in [the docs folder](https://github.com/PawprintPrototyping/arm-game/tree/main/docs).
+
+# Operator Dashboard
+
+A Streamlit-based operator dashboard lives in [`dashboard/`](./dashboard) and runs on `arm-control`. It provides game start/stop controls, per-service management (across both `arm-control` and `arm-display` over SSH), live journal tailing, and a live view of game state derived from MQTT. See [`docs/dashboard.md`](./docs/dashboard.md).

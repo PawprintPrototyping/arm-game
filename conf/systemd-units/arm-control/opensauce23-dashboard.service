@@ -1,0 +1,20 @@
+[Unit]
+Description=Opensauce23 Operator Dashboard (Streamlit)
+After=syslog.target network.target
+
+[Service]
+WorkingDirectory=/home/pi/opensauce23
+Environment="MQTT_HOST=arm-display"
+Environment="SSH_USER=pi"
+Environment="TARGET_COUNT=8"
+Environment="GAME_DURATION_SECONDS=60"
+ExecStart=/home/pi/opensauce23/venv/bin/streamlit run /home/pi/opensauce23/dashboard/app.py \
+    --server.port=8501 \
+    --server.address=0.0.0.0 \
+    --browser.gatherUsageStats=false \
+    --server.headless=true
+Type=simple
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

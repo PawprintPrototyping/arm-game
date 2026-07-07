@@ -1,3 +1,7 @@
+# Documentation
+
+* [Operator Dashboard](https://github.com/PawprintPrototyping/arm-game/tree/main/docs/dashboard.md) — Streamlit dashboard for running games and managing services
+
 # MQTT API documentation
 
 * [Flip Digits API](https://github.com/PawprintPrototyping/arm-game/tree/main/docs/flippies_api.md) - Flip digit scoreboard topics (/scoreboard/digits/...)
