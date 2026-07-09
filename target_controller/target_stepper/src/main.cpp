@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include <CircularBuffer.h>
+#include <CircularBuffer.hpp>
 #include <TimerOne.h>
 #include <StepperState.h>
 
@@ -67,6 +67,24 @@ volatile int enabled = 0;
 volatile int hit = 0;
 volatile bool hitStat = false;
 volatile long lastTransmitTimeMillis = -1;
+
+// Compact binary framing (see docs/serial_protocol.md). Coexists with the legacy ASCII
+// commands below so boards can be reflashed one at a time: the sync byte can't be
+// confused with the first character of any ASCII command (those all start with a
+// lowercase letter).
+const uint8_t syncByte = 0xAA;
+const uint8_t responseFlag = 0x80;
+const uint8_t opcodePoll = 1;
+const uint8_t opcodeEnable = 2;
+const uint8_t opcodeDisable = 3;
+const uint8_t opcodeClear = 4;
+const uint8_t opcodeHome = 5;
+const uint8_t opcodeUp = 6;
+const uint8_t opcodeDown = 7;
+
+bool binaryFrameActive = false;
+int binaryBytesRead = 0;
+uint8_t binaryFrameBuf[2]; // header, crc
 
 String inputString;
 
@@ -200,6 +218,84 @@ void cmdShow() {
   Serial.println(respStr);
 }
 
+// Must match TargetScoringSerial._crc8() in motion/target_scoring_serial.py exactly:
+// poly 0x07, init 0x00.
+uint8_t crc8(const uint8_t* data, size_t len) {
+  uint8_t crc = 0;
+  for (size_t i = 0; i < len; i++) {
+    crc ^= data[i];
+    for (int b = 0; b < 8; b++) {
+      crc = (crc & 0x80) ? ((crc << 1) ^ 0x07) : (crc << 1);
+    }
+  }
+  return crc;
+}
+
+void sendBinaryResponse(uint8_t opcode, uint8_t status) {
+  uint8_t frame[4];
+  frame[0] = syncByte;
+  frame[1] = responseFlag | ((id & 0x0F) << 3) | (opcode & 0x07);
+  frame[2] = status;
+  frame[3] = crc8(&frame[1], 2);
+  enableMax485Driver();
+  Serial.write(frame, 4);
+}
+
+// Dispatches a binary command frame addressed to our id. Silently ignores anything
+// addressed to another board or with an unrecognized opcode - the host will time out
+// and retry rather than get a NAK.
+void handleBinaryFrame(uint8_t header) {
+  uint8_t reqId = (header >> 3) & 0x0F;
+  uint8_t opcode = header & 0x07;
+  if (reqId != id) {
+    return;
+  }
+
+  switch (opcode) {
+    case opcodePoll: {
+      uint8_t status = 0;
+      if (enabled) status |= 0x01;
+      if (hitStat) status |= 0x02;
+      uint8_t posBits;
+      switch (stepperState->getPosition()) {
+        case StepperState::HOME: posBits = 1; break;
+        case StepperState::UP: posBits = 2; break;
+        default: posBits = 0; break;
+      }
+      status |= (posBits & 0x03) << 2;
+      sendBinaryResponse(opcodePoll, status);
+      break;
+    }
+    case opcodeEnable:
+      enabled = 1;
+      digitalWrite(enableIndicatorPin, HIGH);
+      sendBinaryResponse(opcodeEnable, 0x00);
+      break;
+    case opcodeDisable:
+      enabled = 0;
+      digitalWrite(enableIndicatorPin, LOW);
+      sendBinaryResponse(opcodeDisable, 0x00);
+      break;
+    case opcodeClear:
+      hitStat = false;
+      sendBinaryResponse(opcodeClear, 0x00);
+      break;
+    case opcodeHome:
+      stepperState->findHome();
+      sendBinaryResponse(opcodeHome, 0x00);
+      break;
+    case opcodeUp:
+      stepperState->setPosition(StepperState::Position::UP);
+      sendBinaryResponse(opcodeUp, 0x00);
+      break;
+    case opcodeDown:
+      stepperState->setPosition(StepperState::Position::HOME);
+      sendBinaryResponse(opcodeDown, 0x00);
+      break;
+    default:
+      break;
+  }
+}
 
 void setup() {
   stepperState = new StepperState(stepperPwmPin, stepperDirPin, stepperLimitPin);
@@ -288,6 +384,28 @@ void loop() {
   if (!Serial.available()) return;
   // Only read one character per loop to not disrupt moving the targets for too long.
   int c = Serial.read();
+
+  if (binaryFrameActive) {
+    binaryFrameBuf[binaryBytesRead++] = (uint8_t) c;
+    if (binaryBytesRead >= 2) {
+      binaryFrameActive = false;
+      uint8_t header = binaryFrameBuf[0];
+      uint8_t crc = binaryFrameBuf[1];
+      if (crc8(&header, 1) == crc) {
+        handleBinaryFrame(header);
+      }
+    }
+    return;
+  }
+
+  // A sync byte only starts a binary frame at a command boundary - mid-ASCII-command
+  // stray bytes are just noise absorbed into inputString like any other bad input.
+  if (inputString.length() == 0 && (uint8_t) c == syncByte) {
+    binaryFrameActive = true;
+    binaryBytesRead = 0;
+    return;
+  }
+
   if (c != '\n' && c > 0) {
     inputString += (char) c;
     return;
