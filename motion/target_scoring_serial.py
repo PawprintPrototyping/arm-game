@@ -108,6 +108,33 @@ class TargetScoringSerial(SerialBase):
     STATE_HIT = b"1"
     STATE_UNHIT = b"0"
 
+    # New compact binary framing; discovery figures out
+    # which is which per target id, so both can coexist on the same bus.
+    PROTOCOL_BINARY = "binary"
+    PROTOCOL_LEGACY = "legacy"
+
+    SYNC_BYTE = 0xAA
+    RESPONSE_FLAG = 0x80
+
+    OPCODE_POLL = 1
+    OPCODE_ENABLE = 2
+    OPCODE_DISABLE = 3
+    OPCODE_CLEAR = 4
+    OPCODE_HOME = 5
+    OPCODE_UP = 6
+    OPCODE_DOWN = 7
+
+    MAX_FRAME_RETRIES = 3
+
+    _OPCODE_TO_LEGACY = {
+        OPCODE_ENABLE: COMMAND_ENABLE,
+        OPCODE_DISABLE: COMMAND_DISABLE,
+        OPCODE_CLEAR: COMMAND_CLEAR,
+        OPCODE_HOME: COMMAND_HOME,
+        OPCODE_UP: COMMAND_UP,
+        OPCODE_DOWN: COMMAND_DOWN,
+    }
+
     def __init__(self, *args, poll_timeout=DEFAULT_POLL_TIMEOUT,
                  discovery_timeout=DISCOVERY_POLL_TIMEOUT,
                  health_window_size=20, health_error_threshold=0.5,
@@ -117,6 +144,7 @@ class TargetScoringSerial(SerialBase):
         self.poll_timeout = poll_timeout
         self.discovery_timeout = discovery_timeout
         self.target_ids = list(TargetScoringSerial.TARGET_IDS)
+        self.target_protocol = {}
         self.health = {}
         self._health_config = {
             "window_size": health_window_size,
@@ -144,23 +172,37 @@ class TargetScoringSerial(SerialBase):
         timeout = self.discovery_timeout if timeout is None else timeout
 
         discovered = []
+        protocols = {}
         previous_timeout = self.ser.timeout
         self.ser.timeout = timeout
         try:
             for idx in address_range:
+                # Try the compact binary probe first (a single attempt - discovery isn't
+                # the hot path, no need to retry here). Only fall back to the legacy ASCII
+                # probe if that gets no valid response, so old and new boards can coexist.
+                self.ser.reset_input_buffer()
+                status = self._send_binary_command(idx, self.OPCODE_POLL, retries=1)
+                if status is not None:
+                    discovered.append(idx)
+                    protocols[idx] = self.PROTOCOL_BINARY
+                    logger.info("Discovered target (binary protocol)", target=idx)
+                    continue
+
                 # Drain stale bytes so delayed response to previous probe can't get attributed to this address.
                 self.ser.reset_input_buffer()
                 self.ser.write(f"poll {idx}\n".encode("latin1"))
                 line = self.ser.readline()
                 if self._response_matches_id(line, idx):
                     discovered.append(idx)
-                    logger.info("Discovered target", target=idx, response=line)
+                    protocols[idx] = self.PROTOCOL_LEGACY
+                    logger.info("Discovered target (legacy protocol)", target=idx, response=line)
                 else:
                     logger.debug("No response from address", target=idx, response=line)
         finally:
             self.ser.timeout = previous_timeout
 
         self.target_ids = discovered
+        self.target_protocol = protocols
         # Keep the class attribute in sync for anything that still reads it.
         TargetScoringSerial.TARGET_IDS = list(discovered)
         self.health = {
@@ -185,11 +227,57 @@ class TargetScoringSerial(SerialBase):
             return False
         return responder_id == expected_id and parts[1] == b"poll"
 
+    @staticmethod
+    def _crc8(data):
+        """CRC-8, poly 0x07, init 0x00 - must match the firmware's crc8() exactly."""
+        crc = 0
+        for byte in data:
+            crc ^= byte
+            for _ in range(8):
+                crc = ((crc << 1) ^ 0x07) & 0xFF if crc & 0x80 else (crc << 1) & 0xFF
+        return crc
+
+    @classmethod
+    def _encode_command_frame(cls, index, opcode):
+        header = ((index & 0x0F) << 3) | (opcode & 0x07)
+        return bytes([cls.SYNC_BYTE, header, cls._crc8(bytes([header]))])
+
+    def _read_binary_response(self, expected_index, expected_opcode):
+        sync = self.ser.read(1)
+        if sync != bytes([self.SYNC_BYTE]):
+            return None
+        rest = self.ser.read(3)
+        if len(rest) != 3:
+            return None
+        header, status, crc = rest
+        if self._crc8(bytes([header, status])) != crc:
+            return None
+        if not (header & self.RESPONSE_FLAG):
+            return None
+        if (header >> 3) & 0x0F != expected_index or header & 0x07 != expected_opcode:
+            return None
+        return status
+
+    def _send_binary_command(self, index, opcode, retries=None):
+        retries = self.MAX_FRAME_RETRIES if retries is None else retries
+        frame = self._encode_command_frame(index, opcode)
+        for _ in range(retries):
+            self.ser.reset_input_buffer()
+            self.ser.write(frame)
+            status = self._read_binary_response(index, opcode)
+            if status is not None:
+                return status
+        return None
+
     def _publish_available(self, targets):
         try:
             mqtt.single(
                 "targets/available",
-                json.dumps({"targets": targets}),
+                json.dumps({
+                    "targets": targets,
+                    "protocols": {str(idx): self.target_protocol.get(idx, self.PROTOCOL_LEGACY)
+                                  for idx in targets},
+                }),
                 hostname=MQTT_HOST,
                 retain=True,
             )
@@ -252,6 +340,24 @@ class TargetScoringSerial(SerialBase):
         mqtt.single(f"scoreboard/digits/set_number", json.dumps({"number":self.score}), hostname=MQTT_HOST)
 
     def poll(self, index):
+        if self.target_protocol.get(index) == self.PROTOCOL_BINARY:
+            return self._poll_binary(index)
+        return self._poll_legacy(index)
+
+    def _poll_binary(self, index):
+        health = self.health.get(index)
+        status = self._send_binary_command(index, self.OPCODE_POLL)
+        if status is None:
+            logger.warn(f"No valid binary poll response from target {index}")
+            self._record_poll_result(index, health, success=False)
+            return False
+
+        self._record_poll_result(index, health, success=True)
+        hit = bool(status & 0x02)
+        logger.debug("Target poll (binary)", index=index, status=status, hit=hit)
+        return hit
+
+    def _poll_legacy(self, index):
         TargetScoringSerial.logger.debug("Writing poll command", index=index)
         self.ser.write(f"poll {index}\n".encode("latin1"))
         line = self.ser.readline()
@@ -323,23 +429,34 @@ class TargetScoringSerial(SerialBase):
         except Exception as exc:
             logger.warn("Failed to publish target error", error=str(exc))
 
+    def _dispatch(self, index, opcode):
+        """Send a command via the binary protocol if this target speaks it, else fall
+        back to the legacy ASCII command - see discover_targets()."""
+        if self.target_protocol.get(index) == self.PROTOCOL_BINARY:
+            status = self._send_binary_command(index, opcode)
+            if status is None:
+                logger.warn(f"No ack from target {index} for opcode {opcode}")
+            return status
+        legacy_command_template = self._OPCODE_TO_LEGACY[opcode]
+        return self.write(legacy_command_template.format(index=index).encode("latin1"))
+
     def enable(self, index):
-        return self.write(TargetScoringSerial.COMMAND_ENABLE.format(index=index).encode("latin1"))
+        return self._dispatch(index, self.OPCODE_ENABLE)
 
     def disable(self, index):
-        return self.write(TargetScoringSerial.COMMAND_DISABLE.format(index=index).encode("latin1"))
+        return self._dispatch(index, self.OPCODE_DISABLE)
 
     def clear(self, index):
-        return self.write(TargetScoringSerial.COMMAND_CLEAR.format(index=index).encode("latin1"))
+        return self._dispatch(index, self.OPCODE_CLEAR)
 
     def home(self, index):
-        return self.write(TargetScoringSerial.COMMAND_HOME.format(index=index).encode("latin1"))
+        return self._dispatch(index, self.OPCODE_HOME)
 
     def up(self, index):
-        return self.write(TargetScoringSerial.COMMAND_UP.format(index=index).encode("latin1"))
+        return self._dispatch(index, self.OPCODE_UP)
 
     def down(self, index):
-        return self.write(TargetScoringSerial.COMMAND_DOWN.format(index=index).encode("latin1"))
+        return self._dispatch(index, self.OPCODE_DOWN)
 
     def poll_and_clear(self, index):
         state = self.poll(index)
