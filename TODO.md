@@ -8,3 +8,8 @@
 * [ ] Add polling for current position
 * [ ] Compare to commanded position
 * [ ] Tight loop handling to service other sensors and timers
+
+## Ops
+
+- [ ] Ops dashboard
+- [ ] Write an ansible playbook to configure services on a fresh pi
