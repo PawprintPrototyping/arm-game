@@ -1,3 +1,4 @@
+import json
 import os
 import threading
 import time
@@ -21,6 +22,35 @@ class TargetBlinkies(object):
         self.stop = False
         self.thread = threading.Thread(target=self.run)
         self.enabled = False
+        # Populated from the retained `targets/available` topic published by target_scoring_serial
+        self.target_ids = list(TargetScoringSerial.TARGET_IDS)
+
+    def update_target_ids(self, payload):
+        if isinstance(payload, (bytes, str)):
+            try:
+                data = json.loads(payload)
+            except (ValueError, TypeError) as e:
+                logger.warn("Ignoring malformed targets/available payload", payload=payload, error=str(e))
+                return
+        else:
+            data = payload
+
+        if isinstance(data, dict):
+            data = data.get("targets", [])
+        if not isinstance(data, list):
+            logger.warn("Ignoring targets/available payload with unexpected shape",
+                        payload=payload)
+            return
+
+        try:
+            new_ids = [int(t) for t in data]
+        except (TypeError, ValueError) as exc:
+            logger.warn("Ignoring targets/available payload with non-integer IDs", payload=payload, error=str(exc))
+            return
+
+        if new_ids != self.target_ids:
+            logger.info("Updated live target list", old=self.target_ids, new=new_ids)
+            self.target_ids = new_ids # Atomic replace
 
     def publish_enable(self, target_id):
         logger.info("Enable target", target_id=target_id, actuion="enable")
@@ -45,19 +75,24 @@ class TargetBlinkies(object):
 
     def game_start(self):
         logger.info("Home all targets")
-        for target in TargetScoringSerial.TARGET_IDS:
+        for target in list(self.target_ids):
             self.publish_home(target)
 
     def game_over(self):
         logger.info("Disable all targets")
-        for target in TargetScoringSerial.TARGET_IDS:
+        for target in list(self.target_ids):
             self.publish_disable(target)
             self.publish_home(target)
 
     def run(self):
         while not self.stop:
             if self.enabled:
-                target_list = list(TargetScoringSerial.TARGET_IDS)
+                # Copy the list so a mid-iteration update doesn't cause us to pick a target we've already hidden.
+                target_list = list(self.target_ids)
+                if not target_list:
+                    # Nothing discovered yet
+                    time.sleep(MINIMUM_SLEEP_TIME)
+                    continue
                 # Sleep some random amount of time
                 off_time = random.random() + MINIMUM_SLEEP_TIME
                 time.sleep(off_time)

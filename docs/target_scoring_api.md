@@ -2,7 +2,9 @@
 
 Manages physical target hit detection, scoring, and high score tracking over serial.  Targets are addressed by numeric ID.
 
-The `target_scoring_serial.py` service regularly polls the list of connected targets to check if they've been hit.
+The `target_scoring_serial.py` service discovers connected targets at startup by probing every valid address (0-15) once and keeping the responders.  It then regularly polls that live set to check for hits.
+
+Each target's poll outcomes are tracked in a sliding window.  If the recent error rate exceeds the configured threshold, the target is temporarily skipped by the polling loop and probed again every few seconds so it can be re-enabled automatically once it recovers.
 
 All arguments are passed as a JSON-encoded payload.
 
@@ -61,3 +63,22 @@ Scoring: target 2 awards 75 points, all other targets award 69 points.
 ### `target/{id}/errors`
 
 Published when a target poll response cannot be parsed.  Payload: JSON `{"target": <id>, "error_count": <count>}`.
+
+### `targets/available`
+
+Published (retained) after startup discovery with the list of target IDs that responded.  Payload: JSON `{"targets": [<id>, ...]}`.
+
+### `target/{id}/health`
+
+Published (retained) when a target transitions between healthy and unhealthy.  Payload: JSON snapshot of the target's sliding-window stats:
+
+```json
+{
+  "target": 3,
+  "healthy": false,
+  "error_rate": 0.85,
+  "error_count": 42,
+  "poll_count": 118,
+  "window_size": 20
+}
+```
