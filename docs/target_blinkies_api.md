@@ -12,6 +12,10 @@ Enables the target sequencer.  When received, the service begins randomly raisin
 
 Disables the target sequencer.  All targets are disabled and homed.  No arguments.
 
+### `targets/available`
+
+Retained message published by `target_scoring_serial` after startup discovery.  Payload: JSON `{"targets": [<id>, ...]}`.  When received, the sequencer replaces its live target list with the discovered IDs so it only interacts with targets that are actually present.
+
 ## Publishes
 
 The service publishes to the following topics to control individual targets via the target scoring service:

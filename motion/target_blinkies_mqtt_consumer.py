@@ -33,19 +33,29 @@ def on_connect(client, userdata, flags_dict, result):
     )
     client.subscribe(f"scoreboard/timer/game_over")
     client.subscribe(f"scoreboard/rgb/start_timer")
+    # Retained: published by target_scoring_serial after discovery.
+    client.subscribe(f"targets/available")
 
 
 """
 Subscribes to:
-targets/{id}/enable
-targets/{id}/disable
-targets/{id}/clear
+targets/available
+scoreboard/rgb/start_timer
+scoreboard/timer/game_over
 
 Publishes to:
-targets/{id}/hit
+targets/{id}/enable
+targets/{id}/disable
+targets/{id}/up
+targets/{id}/down
+targets/{id}/home
 """
 def on_message(client, blinkies, msg):
     log.debug("on_message", topic=msg.topic, payload=msg.payload)
+
+    if msg.topic == "targets/available":
+        blinkies.update_target_ids(msg.payload)
+        return
 
     if msg.topic == "scoreboard/rgb/start_timer":
         #blinkies.game_start()
