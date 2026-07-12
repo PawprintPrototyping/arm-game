@@ -118,29 +118,30 @@ def on_message(client, targetserial, msg):
             log.warn("Could not set player info: 'name' not in payload!")
         return
 
-    match = TOPIC_REGEX.match(msg.topic)
+    topic_match = TOPIC_REGEX.match(msg.topic)
 
-    if not match:
+    if not topic_match:
         log.warn("Skip regex match")
-    match match['command']:
+        return
+    match topic_match['command']:
         case "enable":
-            log.debug(f"Set target {match['id']} to enabled")
-            targetserial.enqueue(TargetScoringSerial.COMMAND_ENABLE, match['id'])
+            log.debug(f"Set target {topic_match['id']} to enabled")
+            targetserial.enqueue(TargetScoringSerial.COMMAND_ENABLE, topic_match['id'])
         case "disable":
-            log.debug(f"Set target {match['id']} to disabled")
-            targetserial.enqueue(TargetScoringSerial.COMMAND_DISABLE, match['id'])
+            log.debug(f"Set target {topic_match['id']} to disabled")
+            targetserial.enqueue(TargetScoringSerial.COMMAND_DISABLE, topic_match['id'])
         case "clear":
-            log.debug(f"Set target {match['id']} to clear")
-            targetserial.enqueue(TargetScoringSerial.COMMAND_CLEAR, match['id'])
+            log.debug(f"Set target {topic_match['id']} to clear")
+            targetserial.enqueue(TargetScoringSerial.COMMAND_CLEAR, topic_match['id'])
         case "home":
-            log.debug(f"Set target {match['id']} to home")
-            targetserial.enqueue(TargetScoringSerial.COMMAND_HOME, match['id'])
+            log.debug(f"Set target {topic_match['id']} to home")
+            targetserial.enqueue(TargetScoringSerial.COMMAND_HOME, topic_match['id'])
         case "up":
-            log.debug(f"Set target {match['id']} to up")
-            targetserial.enqueue(TargetScoringSerial.COMMAND_UP, match['id'])
+            log.debug(f"Set target {topic_match['id']} to up")
+            targetserial.enqueue(TargetScoringSerial.COMMAND_UP, topic_match['id'])
         case "down":
-            log.debug(f"Set target {match['id']} to down")
-            targetserial.enqueue(TargetScoringSerial.COMMAND_DOWN, match['id'])
+            log.debug(f"Set target {topic_match['id']} to down")
+            targetserial.enqueue(TargetScoringSerial.COMMAND_DOWN, topic_match['id'])
 
 mqttc = mqtt.Client()
 mqttc.enable_logger(log)

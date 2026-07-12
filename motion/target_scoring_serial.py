@@ -92,7 +92,7 @@ class TargetScoringSerial(SerialBase):
 
     # Expected healthy timeout is around 40ms RTT, a little more for startup just in case
     DEFAULT_POLL_TIMEOUT = 0.1
-    DISCOVERY_POLL_TIMEOUT = 0.15
+    DISCOVERY_POLL_TIMEOUT = 0.2
 
     # target_blinkies used to source this value, but now picks up the discovered targets
     # from the `targets/available` topic.
@@ -155,6 +155,7 @@ class TargetScoringSerial(SerialBase):
                 if self._response_matches_id(line, idx):
                     discovered.append(idx)
                     logger.info("Discovered target", target=idx, response=line)
+                    time.sleep(0.1)
                 else:
                     logger.debug("No response from address", target=idx, response=line)
         finally:
