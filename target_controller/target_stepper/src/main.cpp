@@ -400,7 +400,7 @@ void loop() {
 
   // A sync byte only starts a binary frame at a command boundary - mid-ASCII-command
   // stray bytes are just noise absorbed into inputString like any other bad input.
-  if (inputString.length() == 0 && (uint8_t) c == syncByte) {
+  if (!binaryFrameActive && (uint8_t) c == syncByte) {
     binaryFrameActive = true;
     binaryBytesRead = 0;
     return;

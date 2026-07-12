@@ -190,6 +190,8 @@ class TargetScoringSerial(SerialBase):
 
                 # Drain stale bytes so delayed response to previous probe can't get attributed to this address.
                 self.ser.reset_input_buffer()
+                # Flush commands on devices
+                self.ser.write('\n'.encode('latin1'))
                 self.ser.write(f"poll {idx}\n".encode("latin1"))
                 line = self.ser.readline()
                 if self._response_matches_id(line, idx):
@@ -360,7 +362,7 @@ class TargetScoringSerial(SerialBase):
 
     def _poll_legacy(self, index):
         TargetScoringSerial.logger.debug("Writing poll command", index=index)
-        self.ser.write(f"poll {index}\n".encode("latin1"))
+        self.ser.write(f"\npoll {index}\n".encode("latin1"))
         line = self.ser.readline()
         TargetScoringSerial.logger.debug("poll response", index=index, line=line)
 
