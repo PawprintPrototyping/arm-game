@@ -59,9 +59,9 @@ def send_kay_scores(high_scores, last_score):
     # We need a full bash instance, because our ancestors thought it would be funny to make sand think.
     # Something about builtins.
     # GLHF
-    os.system("stty -crtscts -hupcl -F /dev/ttyKayDisplay 115200")
-    cmd = '/bin/bash -c \'echo -en "{}" > /dev/ttyKayDisplay\''.format(payload.decode('latin1'))
-    os.system(cmd)
+    #os.system("stty -crtscts -hupcl -F /dev/ttyKayDisplay 115200")
+    #cmd = '/bin/bash -c \'echo -en "{}" > /dev/ttyKayDisplay\''.format(payload.decode('latin1'))
+    #os.system(cmd)
 
 if __name__ == "__main__":
     db = init_db()

@@ -108,7 +108,7 @@ class TargetBlinkies(object):
                     time.sleep(off_time)
 
                 # Enable subset of chosen targets
-                targets_to_enable_count = random.randint(2, targets_to_show_count)
+                targets_to_enable_count = random.randint(min(2, len(target_list)), targets_to_show_count)
                 enable_targets = random.sample(show_targets, targets_to_enable_count)
 
                 for t in enable_targets:

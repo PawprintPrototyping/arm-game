@@ -9,7 +9,8 @@ PROMPT_TEXT="opensauce"
 class ArmSerial(SerialBase):
     logger = structlog.get_logger()
     STARTUP_SCRIPT = b"""speed 100
-    """
+stance fun
+"""
     ROBOT_LOCATIONS = ["p1", "p2", "p3", "p4", "p5", "tease1", "tease2"]
 
     IDLE = "idle"
