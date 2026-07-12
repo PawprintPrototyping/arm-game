@@ -186,6 +186,7 @@ class TargetScoringSerial(SerialBase):
                     discovered.append(idx)
                     protocols[idx] = self.PROTOCOL_BINARY
                     logger.info("Discovered target (binary protocol)", target=idx)
+                    time.sleep(0.1)
                     continue
 
                 # Drain stale bytes so delayed response to previous probe can't get attributed to this address.
@@ -357,7 +358,8 @@ class TargetScoringSerial(SerialBase):
 
         self._record_poll_result(index, health, success=True)
         hit = bool(status & 0x02)
-        logger.debug("Target poll (binary)", index=index, status=status, hit=hit)
+        if hit:
+            logger.debug("Target poll (binary)", index=index, status=status, hit=hit)
         return hit
 
     def _poll_legacy(self, index):
@@ -435,6 +437,7 @@ class TargetScoringSerial(SerialBase):
     def _dispatch(self, index, opcode):
         """Send a command via the binary protocol if this target speaks it, else fall
         back to the legacy ASCII command - see discover_targets()."""
+        index = int(index)
         if self.target_protocol.get(index) == self.PROTOCOL_BINARY:
             status = self._send_binary_command(index, opcode)
             if status is None:
