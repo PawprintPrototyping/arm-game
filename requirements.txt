@@ -1,5 +1,9 @@
-asyncio-paho==0.6.0
+
+# Ops dashboard (dashboard/)
+fastapi>=0.110,<1.0
+paho-mqtt>=2.0,<3
 pyserial
-structlog==23.1.0
 RPi.GPIO~=0.7.1
 sentry-sdk
+structlog==23.1.0
+uvicorn[standard]>=0.29,<1.0

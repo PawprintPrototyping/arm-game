@@ -1,0 +1,20 @@
+[Unit]
+Description=Opensauce23 Ops Dashboard (FastAPI + Alpine.js)
+After=syslog.target network.target mosquitto.service
+Wants=mosquitto.service
+
+[Service]
+Environment="MQTT_HOST=localhost"
+Environment="MQTT_PORT=1883"
+Environment="MQTT_WS_PORT=9001"
+Environment="MQTT_WS_PATH=/mqtt"
+Environment="DASHBOARD_HOST=0.0.0.0"
+Environment="DASHBOARD_PORT=8000"
+WorkingDirectory=/home/pi/opensauce23
+ExecStart=/home/pi/opensauce23/venv/bin/python -m dashboard
+Type=simple
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

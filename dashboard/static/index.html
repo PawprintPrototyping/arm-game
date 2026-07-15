@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>arm-game ops</title>
+    <link rel="stylesheet" href="/static/style.css" />
+    <!-- Vendored so the dashboard runs on a LAN-only pi. See
+         dashboard/static/vendor/README.md for provenance + refresh steps.
+         Order matters: app.js registers the `dashboard` component during
+         alpine:init, so it must be loaded before alpine core boots. -->
+    <script src="/static/vendor/mqtt-5.10.1.min.js"></script>
+    <script src="/static/app.js"></script>
+    <script defer src="/static/vendor/alpine-3.14.1.min.js"></script>
+  </head>
+  <body x-data="dashboard">
+    <header>
+      <h1>🦾 arm-game ops</h1>
+      <nav>
+        <button :class="{active: tab === 'services'}" @click="tab = 'services'">Services</button>
+        <button :class="{active: tab === 'logs'}" @click="tab = 'logs'">Logs</button>
+        <button :class="{active: tab === 'mqtt'}" @click="tab = 'mqtt'">MQTT</button>
+        <button :class="{active: tab === 'game'}" @click="tab = 'game'">Game</button>
+        <button :class="{active: tab === 'settings'}" @click="tab = 'settings'">Settings</button>
+      </nav>
+      <div class="status-line">
+        <span class="pill" :class="mqttConnected ? 'pill-ok' : 'pill-bad'">
+          MQTT: <span x-text="mqttConnected ? 'connected' : 'disconnected'"></span>
+        </span>
+        <span class="pill">
+          transport: <span x-text="mqttTransport"></span>
+        </span>
+        <span class="pill" x-show="mqttStatusReason" x-text="mqttStatusReason"></span>
+      </div>
+    </header>
+
+    <main>
+      <!-- ────────────────────────── Services ────────────────────────── -->
+      <section x-show="tab === 'services'" class="tab">
+        <div class="toolbar">
+          <button @click="refreshServices()" :disabled="loadingServices">
+            <span x-show="!loadingServices">↻ Refresh</span>
+            <span x-show="loadingServices">refreshing…</span>
+          </button>
+          <label>
+            <input type="checkbox" x-model="autoRefreshServices" />
+            auto-refresh (5s)
+          </label>
+        </div>
+
+        <table class="services">
+          <thead>
+            <tr>
+              <th>Unit</th>
+              <th>State</th>
+              <th>Sub</th>
+              <th>Description</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <template x-for="svc in services" :key="svc.unit">
+              <tr>
+                <td class="mono" x-text="svc.unit"></td>
+                <td>
+                  <span class="pill"
+                        :class="{
+                          'pill-ok':   svc.active === 'active',
+                          'pill-bad':  svc.active === 'failed',
+                          'pill-warn': svc.active === 'activating' || svc.active === 'reloading',
+                        }"
+                        x-text="svc.active"></span>
+                </td>
+                <td class="mono" x-text="svc.sub"></td>
+                <td x-text="svc.description || '—'"></td>
+                <td class="actions">
+                  <button @click="doAction(svc.unit, 'start')">start</button>
+                  <button @click="doAction(svc.unit, 'stop')">stop</button>
+                  <button @click="doAction(svc.unit, 'restart')">restart</button>
+                  <button @click="openLogs(svc.unit)">logs</button>
+                </td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+
+        <div x-show="lastActionResult" class="action-result">
+          <pre x-text="lastActionResult"></pre>
+        </div>
+      </section>
+
+      <!-- ─────────────────────────── Logs ─────────────────────────── -->
+      <section x-show="tab === 'logs'" class="tab">
+        <div class="toolbar">
+          <label>
+            Unit
+            <select x-model="logUnit">
+              <option value="">— pick a unit —</option>
+              <template x-for="svc in services" :key="svc.unit">
+                <option :value="svc.unit" x-text="svc.unit"></option>
+              </template>
+            </select>
+          </label>
+          <button @click="startLogStream()" :disabled="!logUnit || logStreamActive">follow</button>
+          <button @click="stopLogStream()" :disabled="!logStreamActive">stop</button>
+          <button @click="logLines = []">clear</button>
+          <label>
+            <input type="checkbox" x-model="logAutoscroll" />
+            autoscroll
+          </label>
+        </div>
+        <pre class="log-view" x-ref="logView">
+<template x-for="line in logLines" :key="line.id"><span x-text="line.text + '\n'"></span></template>
+        </pre>
+      </section>
+
+      <!-- ────────────────────────── MQTT ────────────────────────── -->
+      <section x-show="tab === 'mqtt'" class="tab">
+        <div class="two-col">
+          <div>
+            <h2>Subscribe</h2>
+            <form @submit.prevent="addSubscription()">
+              <input type="text" placeholder="topic (e.g. #, targets/+/hit)" x-model="subTopicInput" />
+              <button type="submit">subscribe</button>
+            </form>
+            <ul class="topic-list">
+              <template x-for="topic in subscriptions" :key="topic">
+                <li>
+                  <span class="mono" x-text="topic"></span>
+                  <button @click="removeSubscription(topic)" class="link-btn">✕</button>
+                </li>
+              </template>
+            </ul>
+
+            <h2>Publish</h2>
+            <form @submit.prevent="publishForm()">
+              <input type="text" placeholder="topic" x-model="pubTopic" />
+              <textarea placeholder="payload (raw string or JSON)" x-model="pubPayload" rows="3"></textarea>
+              <label>
+                <input type="checkbox" x-model="pubRetain" /> retain
+              </label>
+              <label>
+                QoS
+                <select x-model.number="pubQos">
+                  <option>0</option><option>1</option><option>2</option>
+                </select>
+              </label>
+              <button type="submit">publish</button>
+            </form>
+          </div>
+
+          <div>
+            <div class="toolbar">
+              <h2 style="flex: 1">Messages</h2>
+              <button @click="messages = []">clear</button>
+              <label>
+                <input type="checkbox" x-model="messagesAutoscroll" />
+                autoscroll
+              </label>
+            </div>
+            <div class="messages" x-ref="messageView">
+              <template x-for="msg in messages" :key="msg.id">
+                <div class="msg">
+                  <div class="msg-meta">
+                    <span class="mono topic" x-text="msg.topic"></span>
+                    <span class="msg-ts" x-text="formatTs(msg.ts)"></span>
+                    <span x-show="msg.retain" class="pill pill-warn">retained</span>
+                  </div>
+                  <pre class="msg-body" x-text="msg.payload"></pre>
+                </div>
+              </template>
+              <div x-show="!messages.length" class="hint">no messages yet — subscribe to a topic to start listening</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ─────────────────────────── Game ─────────────────────────── -->
+      <section x-show="tab === 'game'" class="tab">
+        <h2>Session</h2>
+        <div class="btn-grid">
+          <button @click="gameStart()">🟢 start game</button>
+          <button @click="gameStop()">🛑 stop game</button>
+          <button @click="clearScoreboard()">🧼 clear scoreboard</button>
+          <button @click="publishRaw('scoreboard/cowbell', '')">🔔 cowbell</button>
+        </div>
+
+        <h2>Player</h2>
+        <form @submit.prevent="setPlayer()" class="inline">
+          <input type="text" placeholder="player name" x-model="playerName" />
+          <button type="submit">set player</button>
+        </form>
+
+        <h2>Targets</h2>
+        <div class="btn-grid">
+          <button @click="allTargets('disable')">disable all</button>
+          <button @click="allTargets('enable')">enable all</button>
+          <button @click="allTargets('home')">home all</button>
+        </div>
+        <div class="target-grid">
+          <template x-for="id in targetIds" :key="id">
+            <div class="target" :class="{ 'target-unavailable': !isTargetAvailable(id) }">
+              <div class="target-header">
+                <div class="target-name">target <span x-text="id"></span></div>
+                <template x-if="targetHealth[id]">
+                  <span class="pill"
+                        :class="targetHealth[id].healthy ? 'pill-ok' : 'pill-bad'"
+                        x-text="targetHealth[id].healthy ? 'healthy' : 'unhealthy'"></span>
+                </template>
+                <template x-if="!targetHealth[id] && isTargetAvailable(id)">
+                  <span class="pill">no data</span>
+                </template>
+                <template x-if="!isTargetAvailable(id)">
+                  <span class="pill pill-warn">not found</span>
+                </template>
+              </div>
+
+              <div class="target-health" x-show="targetHealth[id]">
+                <div>
+                  err rate:
+                  <span class="mono" x-text="formatErrorRate(targetHealth[id])"></span>
+                </div>
+                <div>
+                  errors/polls:
+                  <span class="mono"
+                        x-text="`${targetHealth[id]?.error_count ?? 0}/${targetHealth[id]?.poll_count ?? 0}`"></span>
+                </div>
+                <div class="target-age" x-text="`updated ${formatAge(targetHealthUpdated[id])}`"></div>
+              </div>
+
+              <div class="target-actions">
+                <button @click="targetAction(id, 'enable')">enable</button>
+                <button @click="targetAction(id, 'disable')">disable</button>
+                <button @click="targetAction(id, 'up')">up</button>
+                <button @click="targetAction(id, 'down')">down</button>
+                <button @click="targetAction(id, 'home')">home</button>
+              </div>
+            </div>
+          </template>
+        </div>
+      </section>
+
+      <!-- ────────────────────────── Settings ────────────────────────── -->
+      <section x-show="tab === 'settings'" class="tab">
+        <h2>MQTT transport</h2>
+        <p>
+          The frontend can either relay MQTT traffic through the FastAPI backend
+          (default) or connect directly to the mosquitto websockets listener.
+        </p>
+        <fieldset>
+          <label>
+            <input type="radio" value="relay" x-model="mqttMode" />
+            Relay via backend WebSocket (<code>/ws/mqtt</code>)
+          </label>
+          <label>
+            <input type="radio" value="direct" x-model="mqttMode" />
+            Direct to mosquitto WebSocket
+          </label>
+        </fieldset>
+
+        <div x-show="mqttMode === 'direct'" class="direct-config">
+          <label>host <input x-model="brokerWs.host" placeholder="hostname" /></label>
+          <label>port <input type="number" x-model.number="brokerWs.port" /></label>
+          <label>path <input x-model="brokerWs.path" placeholder="/mqtt" /></label>
+          <label><input type="checkbox" x-model="brokerWs.tls" /> use TLS (wss)</label>
+        </div>
+
+        <div class="toolbar">
+          <button @click="reconnectMqtt()">apply &amp; reconnect</button>
+        </div>
+
+        <h2>Backend info</h2>
+        <pre x-text="JSON.stringify(config, null, 2)"></pre>
+      </section>
+    </main>
+  </body>
+</html>
