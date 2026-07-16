@@ -105,7 +105,6 @@ class TargetBlinkies(object):
                     if not self.enabled:
                         break
                     self.publish_up(t)
-                    time.sleep(off_time)
 
                 # Enable subset of chosen targets
                 targets_to_enable_count = random.randint(min(2, len(target_list)), targets_to_show_count)

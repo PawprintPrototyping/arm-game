@@ -14,7 +14,7 @@
 
 // Sometimes hardware issues happen. Instead of taking the time to fix it properly, lets just fix it here!
 // Flipping this will reverse motors.
-#define FLIP_DIR true
+#define FLIP_DIR false
 // Next, use #if to check the value of FLIP_DIR
 #if FLIP_DIR
   #define HOME_START_OFFSET -5
