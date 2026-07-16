@@ -44,6 +44,7 @@ while true; do
     clear
     echo -e '\n\n\n'
     figlet -c "GO!"
+    ./dingding.sh
     echo
 
     mosquitto_pub -h arm-display -t scoreboard/digits/clear -m ''
@@ -58,7 +59,7 @@ while true; do
     mosquitto_sub -h arm-display -t scoreboard/timer/game_over -C 1 ||
     mosquitto_pub -h arm-display -t scoreboard/rgb/game_over -m "GAME OVER"
 
-
+    ./dingding.sh
     mosquitto_pub -h arm-display -t motion/motion/stop -m ''
     mosquitto_pub -h arm-display -t target_movement/stop -m ''
 
