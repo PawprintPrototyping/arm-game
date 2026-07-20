@@ -68,9 +68,15 @@ class MqttBridge:
     def _on_connect(
         self, client, userdata, flags, reason_code, properties=None
     ) -> None:
-        # `reason_code` is a ReasonCode object in v2; `.is_failure` and `str()`
-        # both do the right thing.
-        connected = not getattr(reason_code, "is_failure", bool(int(reason_code)))
+        # paho v2 hands us a ReasonCode (has `.is_failure`); older v1 would
+        # give us a plain int. Cover both without ever calling `int()` on the
+        # ReasonCode - `int(ReasonCode)` raises TypeError in some paho builds,
+        # and `getattr(x, name, default)` evaluates `default` eagerly, so we
+        # can't rely on it as a fallback expression either.
+        if hasattr(reason_code, "is_failure"):
+            connected = not reason_code.is_failure
+        else:
+            connected = reason_code == 0
         self._connected = connected
         log.info("MQTT connect reason=%s connected=%s", reason_code, connected)
 

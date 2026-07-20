@@ -12,3 +12,7 @@ Another overview of how each topic queue and component interacts:
 ![MQTT Topic Map](https://raw.githubusercontent.com/PawprintPrototyping/arm-game/refs/heads/main/docs/MQTT%20Topic%20Map.png)
 
 Detailed MQTT Topic API documentation can be found in [the docs folder](https://github.com/PawprintPrototyping/arm-game/tree/main/docs).
+
+# Ops Dashboard
+
+A small FastAPI + Alpine.js UI for running the game lives in [`dashboard/`](./dashboard). It manages `opensauce23-*` systemd services, streams `journalctl` logs, and relays MQTT so operators can watch topics and publish ad-hoc commands from the browser. See [`dashboard/README.md`](./dashboard/README.md) for setup.
